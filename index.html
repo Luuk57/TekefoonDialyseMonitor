@@ -4,10 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>Dialyse Smartphone Monitor</title>
+  
   <link rel="manifest" href="manifest.json">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="theme-color" content="#090d16">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#090d16">
 
   <!-- Firebase SDK's -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
@@ -22,7 +23,7 @@
   <header class="bg-slate-900 border border-slate-800 p-4 rounded-2xl flex justify-between items-center shadow-lg">
     <div>
       <div class="text-[10px] text-slate-400 font-semibold uppercase">Actieve Patiënt</div>
-      <div id="phonePatientName" class="text-sm font-extrabold text-emerald-400">Verbinden...</div>
+      <div id="phonePatientName" class="text-sm font-extrabold text-emerald-400">Niet ingelogd</div>
     </div>
     <span class="text-xs px-2.5 py-1 rounded bg-emerald-500/20 text-emerald-400 font-medium">Live ⚡</span>
   </header>
@@ -162,6 +163,9 @@
     sessionRef.on('value', (snapshot) => {
       const data = snapshot.val();
       if (data) {
+        if (data.patientName) {
+          phonePatientName.innerText = data.patientName;
+        }
         if (data.dryWeight) remoteState.dryWeight = data.dryWeight;
         if (data.preWeight && document.activeElement !== phonePreWeight) {
           phonePreWeight.value = data.preWeight;

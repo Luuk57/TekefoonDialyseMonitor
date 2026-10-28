@@ -112,22 +112,16 @@
           </div>
         </div>
 
-        <!-- NIEUW: Verpleging & Medicatie / Extra's -->
+        <!-- Verpleging & Medicatie / Extra's -->
         <div class="border-t border-slate-800 pt-4 flex flex-col gap-3">
           <h3 class="text-sky-400 font-bold text-sm">👩‍⚕️ Verpleging & Extra Behandelingen</h3>
           
-          <!-- Verpleging Multi-selectie -->
           <div>
             <label class="block text-xs font-semibold text-slate-400 mb-1">Verpleging (Selecteer er meerdere indien nodig)</label>
-            <div id="nurseCheckboxes" class="bg-slate-950 border border-slate-800 rounded-xl p-3 grid grid-cols-2 md:grid-cols-3 gap-2 max-h-32 overflow-y-auto">
-              <!-- Wordt dynamisch geladen uit database -->
-            </div>
+            <div id="nurseCheckboxes" class="bg-slate-950 border border-slate-800 rounded-xl p-3 grid grid-cols-2 md:grid-cols-3 gap-2 max-h-32 overflow-y-auto"></div>
           </div>
 
-          <!-- Medicatie & Metingen Grid -->
           <div class="grid grid-cols-1 md:grid-cols-2 gap-3 bg-slate-950 p-3 rounded-xl border border-slate-800 text-xs">
-            
-            <!-- Fragmin 2500 -->
             <div class="flex flex-col gap-1.5 border-b md:border-b-0 md:border-r border-slate-800 pb-2 md:pb-0 md:pr-3">
               <div class="flex items-center gap-2">
                 <input type="checkbox" id="fragmin2500Check" class="w-4 h-4 accent-sky-500 cursor-pointer">
@@ -136,7 +130,6 @@
               <input type="text" id="fragmin2500Freq" placeholder="Hoevaak / Bij wie (bijv. 2x per week)" class="bg-slate-900 border border-slate-700 rounded-lg p-1.5 text-xs outline-none">
             </div>
 
-            <!-- Fragmin 5000 -->
             <div class="flex flex-col gap-1.5">
               <div class="flex items-center gap-2">
                 <input type="checkbox" id="fragmin5000Check" class="w-4 h-4 accent-sky-500 cursor-pointer">
@@ -145,7 +138,6 @@
               <input type="text" id="fragmin5000Freq" placeholder="Hoevaak / Bij wie (bijv. Elke sessie)" class="bg-slate-900 border border-slate-700 rounded-lg p-1.5 text-xs outline-none">
             </div>
 
-            <!-- Ijzer & Epo -->
             <div class="flex items-center gap-4 pt-2 border-t border-slate-800">
               <div class="flex items-center gap-2">
                 <input type="checkbox" id="ijzerCheck" class="w-4 h-4 accent-emerald-500 cursor-pointer">
@@ -157,7 +149,6 @@
               </div>
             </div>
 
-            <!-- Shuntflow Meting -->
             <div class="flex items-center justify-between pt-2 border-t border-slate-800">
               <div class="flex items-center gap-2">
                 <input type="checkbox" id="shuntCheck" class="w-4 h-4 accent-amber-500 cursor-pointer">
@@ -165,7 +156,6 @@
               </div>
               <input type="text" id="shuntValue" maxlength="4" placeholder="4 nummers" class="w-24 bg-slate-900 border border-slate-700 rounded-lg p-1.5 text-center font-bold text-amber-300 outline-none">
             </div>
-
           </div>
         </div>
 
@@ -364,7 +354,6 @@
 
     <!-- TAB 5: PATIENTEN & VERPLEGING BEHEER -->
     <div id="tab-patient" class="tab-pane flex-col gap-4 w-full max-w-xl mx-auto pb-6">
-      <!-- Patiënt Beheer -->
       <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-6 shadow-lg flex flex-col gap-4">
         <h2 class="text-sky-400 font-bold text-lg border-b border-slate-800 pb-2">👤 Patiënt Beheer & PIN</h2>
         
@@ -396,7 +385,6 @@
         </div>
       </div>
 
-      <!-- NIEUW: Verpleging Beheer -->
       <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-6 shadow-lg flex flex-col gap-4">
         <h2 class="text-sky-400 font-bold text-lg border-b border-slate-800 pb-2">👩‍⚕️ Verpleging Beheer</h2>
         
@@ -407,9 +395,7 @@
 
         <div class="flex flex-col gap-2">
           <span class="text-xs font-semibold text-slate-400">Bestaande Verpleging (klik om te verwijderen):</span>
-          <div id="nurseManageList" class="flex flex-wrap gap-2 max-h-32 overflow-y-auto bg-slate-950 p-3 rounded-xl border border-slate-800">
-            <!-- Wordt dynamisch geladen -->
-          </div>
+          <div id="nurseManageList" class="flex flex-wrap gap-2 max-h-32 overflow-y-auto bg-slate-950 p-3 rounded-xl border border-slate-800"></div>
         </div>
       </div>
     </div>
@@ -458,17 +444,15 @@
 
   </main>
 
-  <!-- ==================== POPUP: INLOGGEN / PATIËNTENMENU ==================== -->
+  <!-- POPUP: INLOGGEN -->
   <div id="loginModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden items-center justify-center z-50">
     <div class="bg-slate-900 border border-slate-800 p-6 rounded-3xl w-80 text-center shadow-2xl flex flex-col gap-4">
       <h3 class="text-sky-400 font-bold text-base">👤 Patiënt Inloggen</h3>
-      
       <div id="loggedInUserBox" class="hidden flex flex-col gap-3">
         <div class="text-xs text-slate-400">Huidige patiënt:</div>
         <div id="activeModalPatientName" class="text-lg font-extrabold text-emerald-400">Jan de Vries</div>
         <button id="logoutPatientBtn" class="w-full bg-rose-600 hover:bg-rose-500 text-white font-bold py-2.5 rounded-xl transition cursor-pointer text-xs">Uitloggen</button>
       </div>
-
       <div id="loginFormBox" class="flex flex-col gap-3">
         <div>
           <label class="block text-xs font-semibold text-slate-400 mb-1 text-left">Kies Patiënt</label>
@@ -482,85 +466,58 @@
         </div>
         <button id="modalLoginSubmit" class="w-full bg-sky-600 hover:bg-sky-500 text-white font-extrabold py-3 rounded-xl transition cursor-pointer text-xs shadow-lg">Inloggen</button>
       </div>
-
       <button id="closeLoginModal" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-300 py-2 rounded-xl font-bold transition cursor-pointer text-xs mt-1">Sluiten</button>
     </div>
   </div>
 
-  <!-- ==================== POPUP: INGESTELDE UF ==================== -->
+  <!-- POPUP: UF -->
   <div id="ufPopup" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden items-center justify-center z-50">
     <div class="bg-slate-900 border border-slate-800 p-6 rounded-3xl w-80 text-center shadow-2xl flex flex-col gap-4">
       <h3 class="text-sky-400 font-bold text-base">Instellen Ingestelde UF (ml)</h3>
-      
-      <div id="popupUfDisplay" class="bg-slate-950 border border-slate-700 rounded-2xl py-3 text-3xl font-extrabold text-sky-400 tracking-wider">
-        3800
-      </div>
-
+      <div id="popupUfDisplay" class="bg-slate-950 border border-slate-700 rounded-2xl py-3 text-3xl font-extrabold text-sky-400 tracking-wider">3800</div>
       <div class="grid grid-cols-4 gap-2">
-        <button onclick="pressUfKey('1')" class="bg-slate-800 hover:bg-slate-700 text-white font-bold py-3 rounded-xl text-lg cursor-pointer">1</button>
-        <button onclick="pressUfKey('2')" class="bg-slate-800 hover:bg-slate-700 text-white font-bold py-3 rounded-xl text-lg cursor-pointer">2</button>
-        <button onclick="pressUfKey('3')" class="bg-slate-800 hover:bg-slate-700 text-white font-bold py-3 rounded-xl text-lg cursor-pointer">3</button>
-        <button onclick="pressUfKey('del')" class="bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/30 font-bold py-3 rounded-xl text-sm cursor-pointer flex items-center justify-center">⌫</button>
-
-        <button onclick="pressUfKey('4')" class="bg-slate-800 hover:bg-slate-700 text-white font-bold py-3 rounded-xl text-lg cursor-pointer">4</button>
-        <button onclick="pressUfKey('5')" class="bg-slate-800 hover:bg-slate-700 text-white font-bold py-3 rounded-xl text-lg cursor-pointer">5</button>
-        <button onclick="pressUfKey('6')" class="bg-slate-800 hover:bg-slate-700 text-white font-bold py-3 rounded-xl text-lg cursor-pointer">6</button>
-        <button onclick="pressUfKey('clear')" class="bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30 font-bold py-3 rounded-xl text-xs cursor-pointer flex items-center justify-center">CLS</button>
-
-        <button onclick="pressUfKey('7')" class="bg-slate-800 hover:bg-slate-700 text-white font-bold py-3 rounded-xl text-lg cursor-pointer">7</button>
-        <button onclick="pressUfKey('8')" class="bg-slate-800 hover:bg-slate-700 text-white font-bold py-3 rounded-xl text-lg cursor-pointer">8</button>
-        <button onclick="pressUfKey('9')" class="bg-slate-800 hover:bg-slate-700 text-white font-bold py-3 rounded-xl text-lg cursor-pointer">9</button>
-        <button onclick="pressUfKey('0')" class="bg-slate-800 hover:bg-slate-700 text-white font-bold py-3 rounded-xl text-lg cursor-pointer">0</button>
-
-        <button id="saveUfPopup" class="col-span-4 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold py-3.5 rounded-xl transition cursor-pointer text-base shadow-lg shadow-emerald-900/30">ok</button>
+        <button onclick="pressUfKey('1')" class="bg-slate-800 text-white font-bold py-3 rounded-xl text-lg">1</button>
+        <button onclick="pressUfKey('2')" class="bg-slate-800 text-white font-bold py-3 rounded-xl text-lg">2</button>
+        <button onclick="pressUfKey('3')" class="bg-slate-800 text-white font-bold py-3 rounded-xl text-lg">3</button>
+        <button onclick="pressUfKey('del')" class="bg-rose-500/20 text-rose-300 border border-rose-500/30 font-bold py-3 rounded-xl text-sm">⌫</button>
+        <button onclick="pressUfKey('4')" class="bg-slate-800 text-white font-bold py-3 rounded-xl text-lg">4</button>
+        <button onclick="pressUfKey('5')" class="bg-slate-800 text-white font-bold py-3 rounded-xl text-lg">5</button>
+        <button onclick="pressUfKey('6')" class="bg-slate-800 text-white font-bold py-3 rounded-xl text-lg">6</button>
+        <button onclick="pressUfKey('clear')" class="bg-amber-500/20 text-amber-300 border border-amber-500/30 font-bold py-3 rounded-xl text-xs">CLS</button>
+        <button onclick="pressUfKey('7')" class="bg-slate-800 text-white font-bold py-3 rounded-xl text-lg">7</button>
+        <button onclick="pressUfKey('8')" class="bg-slate-800 text-white font-bold py-3 rounded-xl text-lg">8</button>
+        <button onclick="pressUfKey('9')" class="bg-slate-800 text-white font-bold py-3 rounded-xl text-lg">9</button>
+        <button onclick="pressUfKey('0')" class="bg-slate-800 text-white font-bold py-3 rounded-xl text-lg">0</button>
+        <button id="saveUfPopup" class="col-span-4 bg-emerald-600 text-white font-extrabold py-3.5 rounded-xl text-base shadow-lg">ok</button>
       </div>
-
-      <button id="closeUfPopup" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-300 py-2 rounded-xl font-bold transition cursor-pointer text-xs">Annuleer</button>
+      <button id="closeUfPopup" class="w-full bg-slate-800 text-slate-300 py-2 rounded-xl font-bold text-xs">Annuleer</button>
     </div>
   </div>
 
-  <!-- ==================== VASTE ONDERBALK MET 6 TEGELS ==================== -->
+  <!-- VASTE ONDERBALK -->
   <nav class="no-print bg-slate-900 border-t border-slate-800 p-2 grid grid-cols-6 gap-2 shrink-0 z-20">
-    <button onclick="switchTab('gewicht')" class="nav-btn flex flex-col items-center justify-center p-2 rounded-xl bg-slate-800/60 hover:bg-slate-800 border border-slate-700 transition data-[active=true]:bg-sky-600 data-[active=true]:border-sky-500 cursor-pointer" data-tab="gewicht">
-      <span class="text-lg">⚖️</span>
-      <span class="text-[10px] font-bold mt-0.5">Gewicht</span>
-    </button>
-    <button onclick="switchTab('uf')" class="nav-btn flex flex-col items-center justify-center p-2 rounded-xl bg-slate-800/60 hover:bg-slate-800 border border-slate-700 transition data-[active=true]:bg-sky-600 data-[active=true]:border-sky-500 cursor-pointer" data-tab="uf">
-      <span class="text-lg">📈</span>
-      <span class="text-[10px] font-bold mt-0.5">Grafieken</span>
-    </button>
-    <button onclick="switchTab('tijd')" class="nav-btn flex flex-col items-center justify-center p-2 rounded-xl bg-slate-800/60 hover:bg-slate-800 border border-slate-700 transition data-[active=true]:bg-sky-600 data-[active=true]:border-sky-500 cursor-pointer" data-tab="tijd">
-      <span class="text-lg">⏱️</span>
-      <span class="text-[10px] font-bold mt-0.5">Tijd</span>
-    </button>
-    <button onclick="switchTab('bpm')" class="nav-btn flex flex-col items-center justify-center p-2 rounded-xl bg-slate-800/60 hover:bg-slate-800 border border-slate-700 transition data-[active=true]:bg-sky-600 data-[active=true]:border-sky-500 cursor-pointer" data-tab="bpm">
-      <span class="text-lg">❤️</span>
-      <span class="text-[10px] font-bold mt-0.5">BPM</span>
-    </button>
-    <button onclick="switchTab('patient')" class="nav-btn flex flex-col items-center justify-center p-2 rounded-xl bg-slate-800/60 hover:bg-slate-800 border border-slate-700 transition data-[active=true]:bg-sky-600 data-[active=true]:border-sky-500 cursor-pointer" data-tab="patient">
-      <span class="text-lg">👤</span>
-      <span class="text-[10px] font-bold mt-0.5">Patiënt</span>
-    </button>
-    <button onclick="switchTab('overzicht')" class="nav-btn flex flex-col items-center justify-center p-2 rounded-xl bg-slate-800/60 hover:bg-slate-800 border border-slate-700 transition data-[active=true]:bg-sky-600 data-[active=true]:border-sky-500 cursor-pointer" data-tab="overzicht">
-      <span class="text-lg">📊</span>
-      <span class="text-[10px] font-bold mt-0.5">Overzicht</span>
-    </button>
+    <button onclick="switchTab('gewicht')" class="nav-btn flex flex-col items-center justify-center p-2 rounded-xl bg-slate-800/60 hover:bg-slate-800 border border-slate-700 transition data-[active=true]:bg-sky-600 data-[active=true]:border-sky-500 cursor-pointer" data-tab="gewicht">⚖️<span class="text-[10px] font-bold mt-0.5">Gewicht</span></button>
+    <button onclick="switchTab('uf')" class="nav-btn flex flex-col items-center justify-center p-2 rounded-xl bg-slate-800/60 hover:bg-slate-800 border border-slate-700 transition data-[active=true]:bg-sky-600 data-[active=true]:border-sky-500 cursor-pointer" data-tab="uf">📈<span class="text-[10px] font-bold mt-0.5">Grafieken</span></button>
+    <button onclick="switchTab('tijd')" class="nav-btn flex flex-col items-center justify-center p-2 rounded-xl bg-slate-800/60 hover:bg-slate-800 border border-slate-700 transition data-[active=true]:bg-sky-600 data-[active=true]:border-sky-500 cursor-pointer" data-tab="tijd">⏱️<span class="text-[10px] font-bold mt-0.5">Tijd</span></button>
+    <button onclick="switchTab('bpm')" class="nav-btn flex flex-col items-center justify-center p-2 rounded-xl bg-slate-800/60 hover:bg-slate-800 border border-slate-700 transition data-[active=true]:bg-sky-600 data-[active=true]:border-sky-500 cursor-pointer" data-tab="bpm">❤️<span class="text-[10px] font-bold mt-0.5">BPM</span></button>
+    <button onclick="switchTab('patient')" class="nav-btn flex flex-col items-center justify-center p-2 rounded-xl bg-slate-800/60 hover:bg-slate-800 border border-slate-700 transition data-[active=true]:bg-sky-600 data-[active=true]:border-sky-500 cursor-pointer" data-tab="patient">👤<span class="text-[10px] font-bold mt-0.5">Patiënt</span></button>
+    <button onclick="switchTab('overzicht')" class="nav-btn flex flex-col items-center justify-center p-2 rounded-xl bg-slate-800/60 hover:bg-slate-800 border border-slate-700 transition data-[active=true]:bg-sky-600 data-[active=true]:border-sky-500 cursor-pointer" data-tab="overzicht">📊<span class="text-[10px] font-bold mt-0.5">Overzicht</span></button>
   </nav>
 
-  <!-- PIN Beveiliging Modal -->
+  <!-- PIN Modal -->
   <div id="pinModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden items-center justify-center z-50">
     <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl w-80 text-center shadow-2xl">
       <h3 class="text-lg font-bold mb-4">Voer PIN in (8)</h3>
-      <input type="password" id="pinInput" maxlength="4" class="w-full bg-slate-950 border border-slate-800 rounded-xl text-center text-3xl py-3 mb-4 tracking-widest outline-none focus:ring-2 focus:ring-sky-500" placeholder="••••">
+      <input type="password" id="pinInput" maxlength="4" class="w-full bg-slate-950 border border-slate-800 rounded-xl text-center text-3xl py-3 mb-4 tracking-widest outline-none" placeholder="••••">
       <div class="flex gap-2">
-        <button id="pinCancel" class="flex-1 bg-slate-800 hover:bg-slate-700 py-2.5 rounded-xl font-bold transition cursor-pointer">Annuleer</button>
-        <button id="pinSubmit" class="flex-1 bg-sky-600 hover:bg-sky-500 py-2.5 rounded-xl font-bold transition cursor-pointer">Ontgrendel</button>
+        <button id="pinCancel" class="flex-1 bg-slate-800 py-2.5 rounded-xl font-bold">Annuleer</button>
+        <button id="pinSubmit" class="flex-1 bg-sky-600 py-2.5 rounded-xl font-bold">Ontgrendel</button>
       </div>
     </div>
   </div>
 
   <script>
-    // --- 36 LED's GENEREREN ---
+    // --- 36 LED's GENEREREN OP DE 12-UURS KLOK ---
     const ledRingContainer = document.getElementById('ledRingContainer');
     const TOTAL_LEDS = 36;
     for (let i = 0; i < TOTAL_LEDS; i++) {
@@ -580,22 +537,16 @@
     }
     const ledDots = document.querySelectorAll('.led-dot');
 
-    // --- TABBLAD NAVIGATIE ---
     function switchTab(tabId) {
       document.querySelectorAll('.tab-pane').forEach(el => el.classList.remove('active'));
       document.getElementById('tab-' + tabId).classList.add('active');
-
       document.querySelectorAll('.nav-btn').forEach(btn => {
-        if (btn.getAttribute('data-tab') === tabId) {
-          btn.setAttribute('data-active', 'true');
-        } else {
-          btn.removeAttribute('data-active');
-        }
+        if (btn.getAttribute('data-tab') === tabId) btn.setAttribute('data-active', 'true');
+        else btn.removeAttribute('data-active');
       });
     }
     switchTab('gewicht');
 
-    // --- FIREBASE CONFIGURATIE ---
     const firebaseConfig = {
       apiKey: "AIzaSyDOj-x4BV4J1rkZ21R29D5KknkTaswWvw",
       authDomain: "tabos-vocht.firebaseapp.com",
@@ -614,39 +565,21 @@
     const patientsRef = db.ref('dialyse_patienten');
     const nursesRef = db.ref('dialyse_verpleging');
 
-    // --- WAKE LOCK API ---
     async function requestWakeLock() {
-      if ('wakeLock' in navigator) {
-        try { await navigator.wakeLock.request('screen'); } catch (err) {}
-      }
+      if ('wakeLock' in navigator) { try { await navigator.wakeLock.request('screen'); } catch (err) {} }
     }
     requestWakeLock();
-    document.addEventListener('visibilitychange', async () => {
-      if (document.visibilityState === 'visible') await requestWakeLock();
-    });
+    document.addEventListener('visibilitychange', async () => { if (document.visibilityState === 'visible') await requestWakeLock(); });
 
-    // --- KIOSK MODE & REFRESH ---
     const kioskBtn = document.getElementById('kioskBtn');
     kioskBtn.onclick = () => {
-      if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen().catch(() => {});
-        kioskBtn.innerText = "⛶ Normaal";
-      } else {
-        if (document.exitFullscreen) document.exitFullscreen();
-        kioskBtn.innerText = "⛶ Kiosk";
-      }
+      if (!document.fullscreenElement) { document.documentElement.requestFullscreen().catch(() => {}); kioskBtn.innerText = "⛶ Normaal"; }
+      else { if (document.exitFullscreen) document.exitFullscreen(); kioskBtn.innerText = "⛶ Kiosk"; }
     };
-
-    document.getElementById('refreshBtn').onclick = () => {
-      location.reload();
-    };
-
+    document.getElementById('refreshBtn').onclick = () => location.reload();
     const dimmer = document.getElementById('dimmer');
-    document.getElementById('brightnessRange').oninput = (e) => {
-      dimmer.style.opacity = e.target.value / 100;
-    };
+    document.getElementById('brightnessRange').oninput = (e) => { dimmer.style.opacity = e.target.value / 100; };
 
-    // --- KIOSK PIN ---
     const pinModal = document.getElementById('pinModal');
     const pinInput = document.getElementById('pinInput');
     document.getElementById('lockBtn').onclick = () => { pinModal.style.display = 'flex'; pinInput.value = ''; pinInput.focus(); };
@@ -656,66 +589,46 @@
     };
     document.getElementById('pinCancel').onclick = () => pinModal.style.display = 'none';
 
-    // --- VERPLEGING BEHEER & RENDEREN ---
+    // VERPLEGING BEHEER
     const nurseCheckboxes = document.getElementById('nurseCheckboxes');
     const nurseManageList = document.getElementById('nurseManageList');
     const newNurseName = document.getElementById('newNurseName');
     let loadedNursesData = {};
 
-    nursesRef.on('value', (snapshot) => {
-      loadedNursesData = snapshot.val() || {};
-      renderNursesUI();
-    });
+    nursesRef.on('value', (snapshot) => { loadedNursesData = snapshot.val() || {}; renderNursesUI(); });
 
     function renderNursesUI() {
-      nurseCheckboxes.innerHTML = '';
-      nurseManageList.innerHTML = '';
-
+      nurseCheckboxes.innerHTML = ''; nurseManageList.innerHTML = '';
       const nurseKeys = Object.keys(loadedNursesData);
       if (nurseKeys.length === 0) {
         nurseCheckboxes.innerHTML = '<span class="text-xs text-slate-500 col-span-2">Geen verpleging ingevoerd</span>';
         nurseManageList.innerHTML = '<span class="text-xs text-slate-500">Geen verpleging aanwezig</span>';
         return;
       }
-
       nurseKeys.forEach(id => {
         const name = loadedNursesData[id];
-        
-        // Multi-select checkboxes in tab 1
         const label = document.createElement('label');
         label.className = "flex items-center gap-2 text-xs font-semibold text-slate-300 cursor-pointer bg-slate-900 p-2 rounded-lg border border-slate-800 hover:border-sky-500";
         label.innerHTML = `<input type="checkbox" value="${name}" class="nurse-chk w-4 h-4 accent-sky-500 cursor-pointer"> ${name}`;
         nurseCheckboxes.appendChild(label);
 
-        // Badge in patiënt/verpleging beheer om te verwijderen
         const badge = document.createElement('div');
         badge.className = "bg-slate-900 border border-slate-700 px-3 py-1 rounded-lg text-xs font-bold text-sky-300 flex items-center gap-2 cursor-pointer hover:border-rose-500";
         badge.innerHTML = `${name} <span class="text-rose-400 font-bold">×</span>`;
-        badge.onclick = () => {
-          if (confirm(`Verpleegkundige ${name} verwijderen?`)) {
-            nursesRef.child(id).remove();
-          }
-        };
+        badge.onclick = () => { if (confirm(`Verpleegkundige ${name} verwijderen?`)) nursesRef.child(id).remove(); };
         nurseManageList.appendChild(badge);
       });
 
-      // Koppel event listeners aan de checkboxes om te synchroniseren met Firebase
-      document.querySelectorAll('.nurse-chk').forEach(chk => {
-        chk.onchange = gatherAndSyncSessionExtras;
-      });
+      document.querySelectorAll('.nurse-chk').forEach(chk => { chk.onchange = gatherAndSyncSessionExtras; });
     }
 
     document.getElementById('saveNewNurseBtn').onclick = () => {
       const name = newNurseName.value.trim();
-      if (!name) {
-        alert('Vul een verpleegkundige naam in!');
-        return;
-      }
-      nursesRef.push(name);
-      newNurseName.value = '';
+      if (!name) return alert('Vul een naam in!');
+      nursesRef.push(name); newNurseName.value = '';
     };
 
-    // --- INLOGMENU & PATIËNTENBEHEER ---
+    // INLOGMENU
     const loginModal = document.getElementById('loginModal');
     const openLoginMenuBtn = document.getElementById('openLoginMenuBtn');
     const closeLoginModal = document.getElementById('closeLoginModal');
@@ -728,7 +641,6 @@
     const logoutPatientBtn = document.getElementById('logoutPatientBtn');
     const headerLoginText = document.getElementById('headerLoginText');
     const activePatientDisplay = document.getElementById('activePatientDisplay');
-
     let loadedPatientsData = {};
 
     patientsRef.on('value', (snapshot) => {
@@ -737,8 +649,7 @@
       Object.keys(loadedPatientsData).forEach(pin => {
         const p = loadedPatientsData[pin];
         const opt = document.createElement('option');
-        opt.value = pin;
-        opt.textContent = p.name;
+        opt.value = pin; opt.textContent = p.name;
         loginPatientSelect.appendChild(opt);
       });
     });
@@ -749,9 +660,7 @@
     modalLoginSubmit.onclick = () => {
       const selectedPin = loginPatientSelect.value;
       const enteredPin = modalPatientPin.value.trim();
-
-      if (!selectedPin) { alert('Selecteer alstublieft een patiënt.'); return; }
-
+      if (!selectedPin) return alert('Selecteer een patiënt.');
       const patient = loadedPatientsData[selectedPin];
       if (patient && patient.pin === enteredPin) {
         activeModalPatientName.innerText = patient.name;
@@ -759,30 +668,21 @@
         activePatientDisplay.innerText = patient.name;
         dryWeightInput.value = patient.dryWeight;
         berekenUF(true);
-
         sessionRef.update({ patientName: patient.name, dryWeight: patient.dryWeight });
         modalPatientPin.value = '';
-
-        loggedInUserBox.classList.remove('hidden');
-        loginFormBox.classList.add('hidden');
-        alert(`Welkom ${patient.name}! Drooggewicht ingesteld op ${patient.dryWeight} kg.`);
-        loginModal.style.display = 'none';
-        switchTab('tijd');
+        loggedInUserBox.classList.remove('hidden'); loginFormBox.classList.add('hidden');
+        alert(`Welkom ${patient.name}!`);
+        loginModal.style.display = 'none'; switchTab('tijd');
       } else {
-        alert('Onjuiste PIN-code voor deze patiënt!');
-        modalPatientPin.value = '';
+        alert('Onjuiste PIN!'); modalPatientPin.value = '';
       }
     };
 
     logoutPatientBtn.onclick = () => {
-      headerLoginText.innerText = "Inloggen";
-      activePatientDisplay.innerText = "Niet ingelogd";
-      loggedInUserBox.classList.add('hidden');
-      loginFormBox.classList.remove('hidden');
-      loginPatientSelect.value = "";
-      modalPatientPin.value = "";
+      headerLoginText.innerText = "Inloggen"; activePatientDisplay.innerText = "Niet ingelogd";
+      loggedInUserBox.classList.add('hidden'); loginFormBox.classList.remove('hidden');
+      loginPatientSelect.value = ""; modalPatientPin.value = "";
       sessionRef.update({ patientName: "Niet ingelogd" });
-      alert('Succesvol uitgelogd.');
       loginModal.style.display = 'none';
     };
 
@@ -795,24 +695,22 @@
       const name = newPatientName.value.trim();
       const dry = parseFloat(newPatientDry.value) || 109.0;
       const pin = newPatientPin.value.trim();
-      if (!name || !pin) { alert('Vul naam en PIN in!'); return; }
+      if (!name || !pin) return alert('Vul naam en PIN in!');
       patientsRef.child(pin).set({ name, dryWeight: dry, pin });
-      alert(`Patiënt ${name} succesvol toegevoegd!`);
+      alert(`Patiënt ${name} toegevoegd!`);
       newPatientName.value = ''; newPatientPin.value = '';
     };
 
     document.getElementById('deletePatientBtn').onclick = () => {
       const pin = deletePatientPin.value.trim();
       if (loadedPatientsData[pin]) {
-        if (confirm(`Weet je zeker dat je patiënt ${loadedPatientsData[pin].name} wilt afvoeren?`)) {
-          patientsRef.child(pin).remove();
-          alert('Patiënt afgevoerd.');
-          deletePatientPin.value = '';
+        if (confirm(`Patiënt ${loadedPatientsData[pin].name} afvoeren?`)) {
+          patientsRef.child(pin).remove(); deletePatientPin.value = '';
         }
-      } else { alert('Geen patiënt gevonden met deze PIN!'); }
+      } else alert('Geen patiënt gevonden!');
     };
 
-    // --- GEWICHT & EXTRA'S SYNCHRONISATIE ---
+    // GEWICHT & EXTRA'S SYNCHRONISATIE
     const dryWeightInput = document.getElementById('dryWeight');
     const preWeightInput = document.getElementById('preWeight');
     const postWeightInput = document.getElementById('postWeight');
@@ -820,7 +718,6 @@
     const ufTrafficLabel = document.getElementById('ufTrafficLabel');
     const setUfInput = document.getElementById('setUfInput');
     const actualUfDisplay = document.getElementById('actualUfDisplay');
-
     const panelSetUf = document.getElementById('panelSetUf');
     const panelUfPerHour = document.getElementById('panelUfPerHour');
     const targetUfPercent = document.getElementById('targetUfPercent');
@@ -828,7 +725,6 @@
     const panelBp = document.getElementById('panelBp');
     const panelTreatmentPercent = document.getElementById('panelTreatmentPercent');
 
-    // Extra velden
     const fragmin2500Check = document.getElementById('fragmin2500Check');
     const fragmin2500Freq = document.getElementById('fragmin2500Freq');
     const fragmin5000Check = document.getElementById('fragmin5000Check');
@@ -841,26 +737,20 @@
     function gatherAndSyncSessionExtras() {
       const selectedNurses = [];
       document.querySelectorAll('.nurse-chk:checked').forEach(chk => selectedNurses.push(chk.value));
-
       sessionRef.update({
         nurses: selectedNurses,
-        fragmin2500: fragmin2500Check.checked,
-        fragmin2500Freq: fragmin2500Freq.value,
-        fragmin5000: fragmin5000Check.checked,
-        fragmin5000Freq: fragmin5000Freq.value,
-        ijzer: ijzerCheck.checked,
-        epo: epoCheck.checked,
-        shunt: shuntCheck.checked,
-        shuntValue: shuntValue.value
+        fragmin2500: fragmin2500Check.checked, fragmin2500Freq: fragmin2500Freq.value,
+        fragmin5000: fragmin5000Check.checked, fragmin5000Freq: fragmin5000Freq.value,
+        ijzer: ijzerCheck.checked, epo: epoCheck.checked,
+        shunt: shuntCheck.checked, shuntValue: shuntValue.value
       });
     }
 
     [fragmin2500Check, fragmin2500Freq, fragmin5000Check, fragmin5000Freq, ijzerCheck, epoCheck, shuntCheck, shuntValue].forEach(el => {
-      el.oninput = gatherAndSyncSessionExtras;
-      el.onchange = gatherAndSyncSessionExtras;
+      el.oninput = gatherAndSyncSessionExtras; el.onchange = gatherAndSyncSessionExtras;
     });
 
-    // --- BPM UP/DOWN LOGICA & KLEUREN ---
+    // BPM LOGICA
     let currentSys = 120; let currentDia = 80; let currentHr = 72;
     const sysDisplay = document.getElementById('sysDisplay');
     const diaDisplay = document.getElementById('diaDisplay');
@@ -895,13 +785,12 @@
         date: nowStr, timestamp: Date.now(), bp: bpString, sys: currentSys, dia: currentDia, hr: currentHr,
         sysClass: getBpmColorClass(currentSys, 100, 140), diaClass: getBpmColorClass(currentDia, 60, 90), hrClass: getBpmColorClass(currentHr, 60, 100)
       });
-      panelBp.innerText = bpString + ' mmHg';
-      sessionRef.update({ bp: bpString, hr: currentHr });
+      panelBp.innerText = bpString + ' mmHg'; sessionRef.update({ bp: bpString, hr: currentHr });
     };
 
     window.deleteBpmRecord = (key) => { if (confirm('Verwijderen?')) bpmHistoryRef.child(key).remove(); };
 
-    // --- TABEL & GESCHIEDENIS ---
+    // TABEL & HISTORIE
     const historyTableBody = document.getElementById('historyTableBody');
     const bpmHistoryTableBody = document.getElementById('bpmHistoryTableBody');
     const fullOverviewTableBody = document.getElementById('fullOverviewTableBody');
@@ -930,8 +819,7 @@
             item.nurses ? `Verpleging: ${item.nurses.join(', ')}` : '',
             item.fragmin2500 ? `Fragmin 2500 (${item.fragmin2500Freq || '-'})` : '',
             item.fragmin5000 ? `Fragmin 5000 (${item.fragmin5000Freq || '-'})` : '',
-            item.ijzer ? 'Ijzer' : '',
-            item.epo ? 'Epo' : '',
+            item.ijzer ? 'Ijzer' : '', item.epo ? 'Epo' : '',
             item.shunt ? `Shuntflow: ${item.shuntValue || '-'}` : ''
           ].filter(Boolean).join(' | ');
 
@@ -963,7 +851,7 @@
       }
     }
 
-    // --- UF POPUP TOETSENBORD ---
+    // UF POPUP
     const ufPopup = document.getElementById('ufPopup');
     const popupUfDisplay = document.getElementById('popupUfDisplay');
     let tempUfValue = "3800";
@@ -1022,8 +910,7 @@
       historyRef.push({
         date: new Date().toLocaleDateString('nl-NL') + ' ' + new Date().toLocaleTimeString('nl-NL', {hour: '2-digit', minute:'2-digit'}),
         timestamp: Date.now(),
-        dry: dryWeightInput.value,
-        pre: pre, post: post,
+        dry: dryWeightInput.value, pre: pre, post: post,
         calculatedUf: ufValueEl.innerText,
         setUf: setUfInput.value ? setUfInput.value + ' ml' : '-',
         actualUf: (pre > 0 && post > 0) ? Math.round((pre - post) * 1000) + ' ml' : '-',
@@ -1038,12 +925,12 @@
 
     window.deleteSession = (key) => { if (confirm('Sessie verwijderen?')) historyRef.child(key).remove(); };
 
-    // --- TIMER & TIMESTAMP LOGICA ---
+    // --- GEAVANCEERDE ANALOGE LED-KLOK LOGICA (12-UURS KLOK REKENING HOUDEND MET START & EINDTIJD) ---
     let totalDurationSec = 4 * 3600;
     let remoteState = { isRunning: false, startTimeEpoch: null, pausedTimeLeft: 4 * 3600, totalDuration: 4 * 3600 };
     const startTimeInput = document.getElementById('startTimeInput');
     const endTimeInput = document.getElementById('endTimeInput');
-    startTimeInput.value = "08:00"; endTimeInput.value = "12:00";
+    startTimeInput.value = "13:00"; endTimeInput.value = "17:00";
 
     function calculateCurrentLeft() {
       if (!remoteState.isRunning) return remoteState.pausedTimeLeft;
@@ -1067,9 +954,40 @@
       targetUfPercent.innerText = percent + '%';
       targetUfBar.style.width = percent + '%';
 
-      const activeLeds = Math.round(progress * TOTAL_LEDS);
+      // --- LED BEREKENING OBV TIJDSBLOK (BIJV. 13:00 - 17:00) ---
+      const [sh, sm] = startTimeInput.value.split(':').map(Number);
+      const [eh, em] = endTimeInput.value.split(':').map(Number);
+
+      const startHour12 = (sh % 12) + (sm / 60);
+      let endHour12 = (eh % 12) + (em / 60);
+      if (endHour12 <= startHour12) endHour12 += 12;
+
+      // 36 LED's = 12 uur, dus 3 LED's per uur (1 LED per 20 minuten)
+      const startLedIndex = Math.floor(startHour12 * 3) % TOTAL_LEDS;
+      let endLedIndex = Math.floor(endHour12 * 3);
+      
+      const totalSessionLeds = endLedIndex - Math.floor(startHour12 * 3);
+      const activeElapsedLeds = Math.round(progress * totalSessionLeds);
+
       ledDots.forEach((dot, index) => {
-        dot.style.backgroundColor = index < activeLeds ? '#10b981' : '#1e293b';
+        // Bereken positie binnen het 12-uurs tijdsframe
+        let relIndex = index;
+        if (relIndex < startLedIndex) relIndex += TOTAL_LEDS;
+
+        if (relIndex >= startLedIndex && relIndex < startLedIndex + totalSessionLeds) {
+          // Deze LED valt BINNEN jouw behandelsessie (bijv. 13:00 tot 17:00)
+          if (relIndex < startLedIndex + activeElapsedLeds) {
+            dot.style.backgroundColor = '#10b981'; // Groen (verstreken tijd)
+            dot.style.boxShadow = '0 0 6px #10b981';
+          } else {
+            dot.style.backgroundColor = '#f59e0b'; // Oranje/Geel (nog te gaan)
+            dot.style.boxShadow = '0 0 6px #f59e0b';
+          }
+        } else {
+          // Buiten de dialyse-tijd staat de LED uit
+          dot.style.backgroundColor = '#1e293b';
+          dot.style.boxShadow = 'none';
+        }
       });
     }
 
@@ -1106,7 +1024,7 @@
       sessionRef.update({ isRunning: false, pausedTimeLeft: remoteState.totalDuration, startTimeEpoch: null });
     };
 
-    // --- FIREBASE LUISTERSTROOM ---
+    // FIREBASE LUISTERSTROOM
     sessionRef.on('value', (snapshot) => {
       const data = snapshot.val();
       if (data) {
@@ -1128,6 +1046,9 @@
         if (data.epo !== undefined) epoCheck.checked = data.epo;
         if (data.shunt !== undefined) shuntCheck.checked = data.shunt;
         if (data.shuntValue) shuntValue.value = data.shuntValue;
+
+        if (data.startTimeStr && data.startTimeStr != startTimeInput.value) startTimeInput.value = data.startTimeStr;
+        if (data.endTimeStr && data.endTimeStr != endTimeInput.value) endTimeInput.value = data.endTimeStr;
 
         if (data.totalDuration) { totalDurationSec = data.totalDuration; remoteState.totalDuration = data.totalDuration; }
         if (typeof data.isRunning === 'boolean') remoteState.isRunning = data.isRunning;

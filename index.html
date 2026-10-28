@@ -2,8 +2,8 @@
 <html lang="nl">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>Dialyse Smartphone Monitor</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Dialyse Smartphone Monitor & Controller</title>
   
   <link rel="manifest" href="manifest.json">
   <meta name="mobile-web-app-capable" content="yes">
@@ -17,31 +17,41 @@
   <!-- Tailwind CSS -->
   <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col p-4 max-w-md mx-auto justify-between">
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col p-4 max-w-md mx-auto justify-between gap-4">
 
   <!-- Bovenkant: Status & Patiënt -->
-  <header class="bg-slate-900 border border-slate-800 p-4 rounded-2xl flex justify-between items-center shadow-lg">
+  <header class="bg-slate-900 border border-slate-800 p-4 rounded-2xl flex justify-between items-center shadow-lg shrink-0">
     <div>
       <div class="text-[10px] text-slate-400 font-semibold uppercase">Actieve Patiënt</div>
       <div id="phonePatientName" class="text-sm font-extrabold text-emerald-400">Niet ingelogd</div>
     </div>
-    <span class="text-xs px-2.5 py-1 rounded bg-emerald-500/20 text-emerald-400 font-medium">Live ⚡</span>
+    <span class="text-xs px-2.5 py-1 rounded bg-emerald-500/20 text-emerald-400 font-medium">Live Synced ⚡</span>
   </header>
 
-  <!-- Midden: De Countdown Klok -->
-  <main class="flex flex-col items-center justify-center my-6 gap-4">
-    <div class="bg-slate-900 border border-slate-800 p-6 rounded-3xl w-full text-center shadow-xl flex flex-col items-center">
+  <!-- Midden: De Countdown Klok & Bediening -->
+  <main class="flex flex-col gap-4 w-full">
+    
+    <!-- Klok Card -->
+    <div class="bg-slate-900 border border-slate-800 p-5 rounded-3xl w-full text-center shadow-xl flex flex-col items-center">
       <span class="text-xs text-slate-400 font-semibold mb-1">⏱️ Resterende Tijd</span>
       <div id="phoneCountdown" class="text-4xl font-extrabold text-sky-400 tracking-wider mb-2">04:00:00</div>
-      <div class="w-full bg-slate-950 rounded-full h-2.5 border border-slate-800 overflow-hidden">
+      
+      <div class="w-full bg-slate-950 rounded-full h-2.5 border border-slate-800 overflow-hidden mb-2">
         <div id="phoneProgressBar" class="bg-emerald-500 h-full transition-all duration-300" style="width: 0%"></div>
       </div>
-      <div id="phoneProgressText" class="text-[11px] text-slate-400 mt-2">0% verstreken</div>
+      <div id="phoneProgressText" class="text-[11px] text-slate-400 mb-3">0% verstreken</div>
+
+      <!-- Knoppen om timer te bedienen vanaf telefoon! -->
+      <div class="flex gap-2 w-full">
+        <button id="phoneStartTimer" class="flex-1 bg-emerald-600 hover:bg-emerald-500 py-2 rounded-xl font-bold transition cursor-pointer text-xs">Start</button>
+        <button id="phonePauseTimer" class="flex-1 bg-amber-600 hover:bg-amber-500 py-2 rounded-xl font-bold transition cursor-pointer text-xs">Pauze</button>
+        <button id="phoneResetTimer" class="flex-1 bg-slate-700 hover:bg-slate-600 py-2 rounded-xl font-bold transition cursor-pointer text-xs">Reset</button>
+      </div>
     </div>
 
-    <!-- Gewichten Snel Invullen -->
+    <!-- Gewichten & UF Invoeren -->
     <div class="bg-slate-900 border border-slate-800 p-5 rounded-3xl w-full shadow-xl flex flex-col gap-3">
-      <h2 class="text-sky-400 font-bold text-xs border-b border-slate-800 pb-2">⚖️ Gewichten & UF Invoeren</h2>
+      <h2 class="text-sky-400 font-bold text-xs border-b border-slate-800 pb-2">⚖️ Gewichten & UF Instellen</h2>
       
       <div class="grid grid-cols-2 gap-3">
         <div>
@@ -54,25 +64,30 @@
         </div>
       </div>
 
+      <div>
+        <label class="block text-[10px] font-semibold text-sky-400 mb-1">Ingestelde UF (ml)</label>
+        <input type="number" id="phoneSetUfInput" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-sm font-bold text-center text-sky-300 outline-none">
+      </div>
+
       <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex justify-between items-center text-xs">
         <div>
           <span class="text-slate-400 block text-[10px]">Berekend UF Advies:</span>
           <strong id="phoneUfAdvise" class="text-emerald-400 text-sm">0 ml</strong>
         </div>
         <div>
-          <span class="text-slate-400 block text-[10px]">Ingestelde UF:</span>
-          <strong id="phoneSetUf" class="text-sky-400 text-sm">3800 ml</strong>
+          <span class="text-slate-400 block text-[10px]">Werkelijke UF (Pre-Post):</span>
+          <strong id="phoneActualUf" class="text-amber-400 text-sm">0 ml</strong>
         </div>
       </div>
 
       <button id="phoneSaveBtn" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl transition cursor-pointer text-xs shadow">
-        💾 Wijzigingen Opslaan & Synchroniseren
+        💾 Alles Opslaan & Synchroniseren
       </button>
     </div>
   </main>
 
   <!-- Onderkant: Laatste Bloeddruk -->
-  <footer class="bg-slate-900 border border-slate-800 p-3 rounded-2xl text-center text-xs text-slate-400">
+  <footer class="bg-slate-900 border border-slate-800 p-3 rounded-2xl text-center text-xs text-slate-400 shrink-0">
     Laatste Bloeddruk: <strong id="phoneBpDisplay" class="text-emerald-400">120 / 80 mmHg</strong>
   </footer>
 
@@ -104,8 +119,9 @@
     const phoneProgressText = document.getElementById('phoneProgressText');
     const phonePreWeight = document.getElementById('phonePreWeight');
     const phonePostWeight = document.getElementById('phonePostWeight');
+    const phoneSetUfInput = document.getElementById('phoneSetUfInput');
     const phoneUfAdvise = document.getElementById('phoneUfAdvise');
-    const phoneSetUf = document.getElementById('phoneSetUf');
+    const phoneActualUf = document.getElementById('phoneActualUf');
     const phoneBpDisplay = document.getElementById('phoneBpDisplay');
     const phonePatientName = document.getElementById('phonePatientName');
 
@@ -139,25 +155,73 @@
     function calculatePhoneUf() {
       const dry = remoteState.dryWeight || 109.0;
       const pre = parseFloat(phonePreWeight.value) || 0;
+      const post = parseFloat(phonePostWeight.value) || 0;
+
       const ufKg = (pre - dry + 0.3);
       const ufMl = Math.round(ufKg * 1000);
       phoneUfAdvise.innerText = pre > 0 ? ufMl + ' ml' : '0 ml';
+
+      const actualMl = Math.round((pre - post) * 1000);
+      phoneActualUf.innerText = (pre > 0 && post > 0) ? actualMl + ' ml' : '0 ml';
     }
 
     phonePreWeight.oninput = calculatePhoneUf;
+    phonePostWeight.oninput = calculatePhoneUf;
+
+    // Knoppen bediening vanaf smartphone
+    document.getElementById('phoneStartTimer').onclick = () => {
+      const currentLeft = calculateCurrentLeft();
+      const newStartEpoch = Date.now() - ((remoteState.totalDuration - currentLeft) * 1000);
+      
+      remoteState.isRunning = true;
+      remoteState.startTimeEpoch = newStartEpoch;
+
+      sessionRef.update({ 
+        isRunning: true, 
+        startTimeEpoch: newStartEpoch,
+        totalDuration: remoteState.totalDuration
+      });
+    };
+
+    document.getElementById('phonePauseTimer').onclick = () => {
+      const currentLeft = calculateCurrentLeft();
+      remoteState.isRunning = false;
+      remoteState.pausedTimeLeft = currentLeft;
+
+      sessionRef.update({ 
+        isRunning: false, 
+        pausedTimeLeft: currentLeft 
+      });
+    };
+
+    document.getElementById('phoneResetTimer').onclick = () => {
+      remoteState.isRunning = false;
+      remoteState.pausedTimeLeft = remoteState.totalDuration;
+      remoteState.startTimeEpoch = null;
+
+      sessionRef.update({ 
+        isRunning: false, 
+        pausedTimeLeft: remoteState.totalDuration, 
+        startTimeEpoch: null 
+      });
+    };
 
     document.getElementById('phoneSaveBtn').onclick = () => {
       const pre = parseFloat(phonePreWeight.value) || 0;
       const post = parseFloat(phonePostWeight.value) || 0;
       const dry = remoteState.dryWeight || 109.0;
       const calcUf = Math.round((pre - dry + 0.3) * 1000);
+      const actualUf = Math.round((pre - post) * 1000);
+      const setUf = phoneSetUfInput.value;
 
       sessionRef.update({
         preWeight: pre,
         postWeight: post,
-        calculatedUf: calcUf
+        calculatedUf: calcUf,
+        actualUf: (pre > 0 && post > 0) ? actualUf : 0,
+        setUf: setUf
       });
-      alert('Gegevens succesvol gesynchroniseerd met de hoofdsessie!');
+      alert('Alle gegevens succesvol opgeslagen en gesynchroniseerd met de kiosk!');
     };
 
     sessionRef.on('value', (snapshot) => {
@@ -167,16 +231,19 @@
           phonePatientName.innerText = data.patientName;
         }
         if (data.dryWeight) remoteState.dryWeight = data.dryWeight;
-        if (data.preWeight && document.activeElement !== phonePreWeight) {
+        
+        if (data.preWeight !== undefined && document.activeElement !== phonePreWeight) {
           phonePreWeight.value = data.preWeight;
-          calculatePhoneUf();
         }
-        if (data.postWeight && document.activeElement !== phonePostWeight) {
+        if (data.postWeight !== undefined && document.activeElement !== phonePostWeight) {
           phonePostWeight.value = data.postWeight;
         }
-        if (data.setUf) {
-          phoneSetUf.innerText = data.setUf + ' ml';
+        if (data.setUf !== undefined && document.activeElement !== phoneSetUfInput) {
+          phoneSetUfInput.value = data.setUf;
         }
+
+        calculatePhoneUf();
+
         if (data.bp) {
           phoneBpDisplay.innerText = data.bp + ' mmHg';
         }

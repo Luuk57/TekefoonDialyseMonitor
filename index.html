@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Dialyse Smartphone Monitor & Controller</title>
+  <title>Dialyse Log - Kiosk Dashboard</title>
   
   <link rel="manifest" href="manifest.json">
   <meta name="mobile-web-app-capable" content="yes">
@@ -16,82 +16,586 @@
 
   <!-- Tailwind CSS -->
   <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-</head>
-<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col p-4 max-w-md mx-auto justify-between gap-4">
 
-  <!-- Bovenkant: Status & Patiënt -->
-  <header class="bg-slate-900 border border-slate-800 p-4 rounded-2xl flex justify-between items-center shadow-lg shrink-0">
-    <div>
-      <div class="text-[10px] text-slate-400 font-semibold uppercase">Actieve Patiënt</div>
-      <div id="phonePatientName" class="text-sm font-extrabold text-emerald-400">Niet ingelogd</div>
+  <style>
+    body { overscroll-behavior: none; user-select: none; }
+    #dimmer { position: fixed; inset: 0; background: black; pointer-events: none; opacity: 0; z-index: 9999; transition: opacity 0.3s; }
+    .tab-pane { display: none; }
+    .tab-pane.active { display: flex; }
+    .led-dot { transition: background-color 0.4s ease, box-shadow 0.4s ease; }
+
+    @media print {
+      body * { visibility: hidden; }
+      #printArea, #printArea * { visibility: visible; }
+      #printArea { position: absolute; left: 0; top: 0; width: 100%; color: black !important; background: white !important; }
+      .no-print { display: none !important; }
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 h-screen w-screen flex flex-col overflow-hidden relative">
+
+  <!-- Helderheid / Dimmer overlay -->
+  <div id="dimmer"></div>
+
+  <!-- ==================== VASTE BOVENBALK ==================== -->
+  <header class="bg-slate-900 border-b border-slate-800 px-4 py-2.5 flex justify-between items-center z-20 shrink-0">
+    <div class="flex items-center gap-3">
+      <span class="text-xl">🩺</span>
+      <h1 class="font-bold tracking-wide text-sky-400 text-sm">Dialyse Kiosk</h1>
+      <span id="syncStatus" class="text-xs px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-medium">Live Synced ⚡</span>
     </div>
-    <span class="text-xs px-2.5 py-1 rounded bg-emerald-500/20 text-emerald-400 font-medium">Live Synced ⚡</span>
+
+    <div class="flex items-center gap-2">
+      <!-- Live Aftelklok -->
+      <div class="flex items-center gap-2 bg-slate-950 px-3 py-1 rounded-xl border border-slate-800">
+        <span class="text-xs text-slate-400">⏱️ Restant:</span>
+        <span id="topCountdown" class="font-extrabold text-sky-400 text-sm tracking-wider">04:00:00</span>
+      </div>
+      <!-- Refresh Knop -->
+      <button id="refreshBtn" class="bg-slate-800 hover:bg-slate-700 text-sky-400 px-2.5 py-1 rounded-xl text-xs font-semibold transition cursor-pointer border border-slate-700" title="Pagina Vernieuwen">🔄</button>
+    </div>
+    
+    <div class="flex items-center gap-2.5 text-sm">
+      <!-- Inlogknop voor Patiëntenmenu -->
+      <button id="openLoginMenuBtn" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1 shadow">
+        👤 <span id="headerLoginText">Inloggen</span>
+      </button>
+
+      <div class="hidden md:flex items-center gap-2 bg-slate-800 px-3 py-1 rounded-xl border border-slate-700 text-xs">
+        <span>🌙 Dim:</span>
+        <input type="range" id="brightnessRange" min="0" max="80" value="0" class="w-16 accent-sky-400 cursor-pointer">
+      </div>
+
+      <!-- Kiosk Mode / Fullscreen Knop -->
+      <button id="kioskBtn" class="bg-sky-600 hover:bg-sky-500 text-white px-3 py-1 rounded-lg text-xs font-bold transition cursor-pointer shadow">⛶ Kiosk</button>
+      <button id="lockBtn" class="bg-rose-500/20 text-rose-300 border border-rose-500/30 px-2.5 py-1 rounded-lg text-xs font-semibold transition cursor-pointer">🔒 Slot</button>
+    </div>
   </header>
 
-  <!-- Midden: De Countdown Klok & Bediening -->
-  <main class="flex flex-col gap-4 w-full">
+  <!-- ==================== MAIN PAGINA INHOUD (TABBLADEN) ==================== -->
+  <main class="flex-1 p-4 overflow-y-auto relative flex flex-col items-center">
     
-    <!-- Klok Card -->
-    <div class="bg-slate-900 border border-slate-800 p-5 rounded-3xl w-full text-center shadow-xl flex flex-col items-center">
-      <span class="text-xs text-slate-400 font-semibold mb-1">⏱️ Resterende Tijd</span>
-      <div id="phoneCountdown" class="text-4xl font-extrabold text-sky-400 tracking-wider mb-2">04:00:00</div>
-      
-      <div class="w-full bg-slate-950 rounded-full h-2.5 border border-slate-800 overflow-hidden mb-2">
-        <div id="phoneProgressBar" class="bg-emerald-500 h-full transition-all duration-300" style="width: 0%"></div>
-      </div>
-      <div id="phoneProgressText" class="text-[11px] text-slate-400 mb-3">0% verstreken</div>
+    <!-- TAB 1: GEWICHT & EXTRA'S -->
+    <div id="tab-gewicht" class="tab-pane active flex-col gap-4 w-full max-w-2xl mx-auto pb-6">
+      <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 shadow-lg flex flex-col gap-4">
+        <h2 class="text-sky-400 font-bold text-base border-b border-slate-800 pb-2">⚖️ Gewicht & UF Berekening (in ml)</h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-400 mb-1">Vaste Drooggewicht (kg)</label>
+            <input type="number" step="0.1" id="dryWeight" value="109.0" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-base font-bold text-center outline-none focus:ring-2 focus:ring-sky-500">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-400 mb-1">Pre-gewicht (Vóór) (kg)</label>
+            <input type="number" step="0.1" id="preWeight" value="112.5" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-base font-bold text-center outline-none focus:ring-2 focus:ring-sky-500">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-400 mb-1">Post-gewicht (Na) (kg)</label>
+            <input type="number" step="0.1" id="postWeight" value="109.2" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-base font-bold text-center outline-none focus:ring-2 focus:ring-sky-500">
+          </div>
+        </div>
 
-      <!-- Knoppen om timer te bedienen vanaf telefoon! -->
-      <div class="flex gap-2 w-full">
-        <button id="phoneStartTimer" class="flex-1 bg-emerald-600 hover:bg-emerald-500 py-2 rounded-xl font-bold transition cursor-pointer text-xs">Start</button>
-        <button id="phonePauseTimer" class="flex-1 bg-amber-600 hover:bg-amber-500 py-2 rounded-xl font-bold transition cursor-pointer text-xs">Pauze</button>
-        <button id="phoneResetTimer" class="flex-1 bg-slate-700 hover:bg-slate-600 py-2 rounded-xl font-bold transition cursor-pointer text-xs">Reset</button>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 bg-slate-950 p-3 rounded-xl border border-slate-800 items-center">
+          <div>
+            <div class="text-[11px] font-bold uppercase text-slate-400">Berekend UF Advies</div>
+            <div id="ufValue" class="text-xl font-extrabold text-emerald-400">3800 ml</div>
+            <div id="ufTrafficLabel" class="text-[10px] text-emerald-400 font-semibold">Normaal (< 4000 ml) 🟢</div>
+          </div>
+          <div>
+            <label class="block text-[11px] font-semibold text-sky-400 mb-1">Ingestelde UF (ml) (Aanpasbaar)</label>
+            <input type="number" id="setUfInput" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm font-bold text-center text-sky-300 outline-none focus:ring-2 focus:ring-sky-500" placeholder="3800">
+          </div>
+          <div>
+            <div class="text-[11px] font-bold uppercase text-amber-400">Werkelijke UF (Pre - Post)</div>
+            <div id="actualUfDisplay" class="text-xl font-extrabold text-amber-400">3300 ml</div>
+            <div class="text-[10px] text-slate-500">Automatisch berekend</div>
+          </div>
+        </div>
+
+        <!-- NIEUW: Verpleging & Medicatie / Extra's -->
+        <div class="border-t border-slate-800 pt-4 flex flex-col gap-3">
+          <h3 class="text-sky-400 font-bold text-sm">👩‍⚕️ Verpleging & Extra Behandelingen</h3>
+          
+          <!-- Verpleging Multi-selectie -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-400 mb-1">Verpleging (Selecteer er meerdere indien nodig)</label>
+            <div id="nurseCheckboxes" class="bg-slate-950 border border-slate-800 rounded-xl p-3 grid grid-cols-2 md:grid-cols-3 gap-2 max-h-32 overflow-y-auto">
+              <!-- Wordt dynamisch geladen uit database -->
+            </div>
+          </div>
+
+          <!-- Medicatie & Metingen Grid -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3 bg-slate-950 p-3 rounded-xl border border-slate-800 text-xs">
+            
+            <!-- Fragmin 2500 -->
+            <div class="flex flex-col gap-1.5 border-b md:border-b-0 md:border-r border-slate-800 pb-2 md:pb-0 md:pr-3">
+              <div class="flex items-center gap-2">
+                <input type="checkbox" id="fragmin2500Check" class="w-4 h-4 accent-sky-500 cursor-pointer">
+                <label for="fragmin2500Check" class="font-bold text-sky-300 cursor-pointer">Fragmin 2500</label>
+              </div>
+              <input type="text" id="fragmin2500Freq" placeholder="Hoevaak / Bij wie (bijv. 2x per week)" class="bg-slate-900 border border-slate-700 rounded-lg p-1.5 text-xs outline-none">
+            </div>
+
+            <!-- Fragmin 5000 -->
+            <div class="flex flex-col gap-1.5">
+              <div class="flex items-center gap-2">
+                <input type="checkbox" id="fragmin5000Check" class="w-4 h-4 accent-sky-500 cursor-pointer">
+                <label for="fragmin5000Check" class="font-bold text-sky-300 cursor-pointer">Fragmin 5000</label>
+              </div>
+              <input type="text" id="fragmin5000Freq" placeholder="Hoevaak / Bij wie (bijv. Elke sessie)" class="bg-slate-900 border border-slate-700 rounded-lg p-1.5 text-xs outline-none">
+            </div>
+
+            <!-- Ijzer & Epo -->
+            <div class="flex items-center gap-4 pt-2 border-t border-slate-800">
+              <div class="flex items-center gap-2">
+                <input type="checkbox" id="ijzerCheck" class="w-4 h-4 accent-emerald-500 cursor-pointer">
+                <label for="ijzerCheck" class="font-bold text-emerald-300 cursor-pointer">Ijzer aanvinken</label>
+              </div>
+              <div class="flex items-center gap-2">
+                <input type="checkbox" id="epoCheck" class="w-4 h-4 accent-emerald-500 cursor-pointer">
+                <label for="epoCheck" class="font-bold text-emerald-300 cursor-pointer">Epo aanvinken</label>
+              </div>
+            </div>
+
+            <!-- Shuntflow Meting -->
+            <div class="flex items-center justify-between pt-2 border-t border-slate-800">
+              <div class="flex items-center gap-2">
+                <input type="checkbox" id="shuntCheck" class="w-4 h-4 accent-amber-500 cursor-pointer">
+                <label for="shuntCheck" class="font-bold text-amber-300 cursor-pointer">Shuntflow meting</label>
+              </div>
+              <input type="text" id="shuntValue" maxlength="4" placeholder="4 nummers" class="w-24 bg-slate-900 border border-slate-700 rounded-lg p-1.5 text-center font-bold text-amber-300 outline-none">
+            </div>
+
+          </div>
+        </div>
+
+        <button id="saveSessionBtn" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 rounded-xl transition cursor-pointer text-sm mt-2">💾 Huidige Sessie Opslaan naar Overzicht</button>
+      </div>
+
+      <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 shadow-lg flex flex-col gap-3">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-slate-800 pb-2 gap-2">
+          <h3 class="text-sky-400 font-bold text-sm">📋 Overzicht Eerdere Dialyses</h3>
+          <div class="flex gap-2 text-[11px]">
+            <span class="bg-slate-950 px-2.5 py-1 rounded-lg border border-slate-800 text-slate-300">Hoog: <strong id="statHigh" class="text-sky-400">-</strong></span>
+            <span class="bg-slate-950 px-2.5 py-1 rounded-lg border border-slate-800 text-slate-300">Laag: <strong id="statLow" class="text-emerald-400">-</strong></span>
+            <span class="bg-slate-950 px-2.5 py-1 rounded-lg border border-slate-800 text-slate-300">Gem: <strong id="statAvg" class="text-amber-400">-</strong></span>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto max-h-48">
+          <table class="w-full text-left text-xs">
+            <thead class="text-slate-400 border-b border-slate-800">
+              <tr>
+                <th class="py-2 px-1">Datum</th>
+                <th class="py-2 px-1">Pre</th>
+                <th class="py-2 px-1">Na</th>
+                <th class="py-2 px-1">Advies</th>
+                <th class="py-2 px-1">Ingesteld</th>
+                <th class="py-2 px-1">Werkelijk</th>
+                <th class="py-2 px-1 text-right">Acties</th>
+              </tr>
+            </thead>
+            <tbody id="historyTableBody"></tbody>
+          </table>
+        </div>
       </div>
     </div>
 
-    <!-- Gewichten & UF Invoeren -->
-    <div class="bg-slate-900 border border-slate-800 p-5 rounded-3xl w-full shadow-xl flex flex-col gap-3">
-      <h2 class="text-sky-400 font-bold text-xs border-b border-slate-800 pb-2">⚖️ Gewichten & UF Instellen</h2>
-      
-      <div class="grid grid-cols-2 gap-3">
-        <div>
-          <label class="block text-[10px] font-semibold text-slate-400 mb-1">Pre-gewicht (kg)</label>
-          <input type="number" step="0.1" id="phonePreWeight" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-sm font-bold text-center text-sky-400 outline-none">
-        </div>
-        <div>
-          <label class="block text-[10px] font-semibold text-slate-400 mb-1">Post-gewicht (kg)</label>
-          <input type="number" step="0.1" id="phonePostWeight" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-sm font-bold text-center text-emerald-400 outline-none">
+    <!-- TAB 2: GRAFIEKEN -->
+    <div id="tab-uf" class="tab-pane flex-col gap-4 w-full max-w-2xl mx-auto pb-6">
+      <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 shadow-lg flex flex-col gap-4">
+        <h2 class="text-sky-400 font-bold text-base border-b border-slate-800 pb-2">📈 Grafiek Gewichtsverloop (Voor & Na)</h2>
+        <div id="chartContainer" class="bg-slate-950 p-4 rounded-xl border border-slate-800 h-52 flex items-end gap-2 justify-around"></div>
+        <div class="flex justify-center gap-4 text-xs text-slate-400">
+          <span class="flex items-center gap-1.5"><span class="w-3 h-3 bg-sky-500 rounded"></span> Pre-gewicht</span>
+          <span class="flex items-center gap-1.5"><span class="w-3 h-3 bg-emerald-500 rounded"></span> Na-gewicht</span>
         </div>
       </div>
 
-      <div>
-        <label class="block text-[10px] font-semibold text-sky-400 mb-1">Ingestelde UF (ml)</label>
-        <input type="number" id="phoneSetUfInput" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-sm font-bold text-center text-sky-300 outline-none">
-      </div>
-
-      <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex justify-between items-center text-xs">
-        <div>
-          <span class="text-slate-400 block text-[10px]">Berekend UF Advies:</span>
-          <strong id="phoneUfAdvise" class="text-emerald-400 text-sm">0 ml</strong>
+      <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 shadow-lg flex flex-col gap-4">
+        <h2 class="text-sky-400 font-bold text-base border-b border-slate-800 pb-2">❤️ Lijngrafiek Bloeddruk & Hartslag</h2>
+        <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 h-56 relative flex items-center justify-center">
+          <svg id="bpmLineChart" class="w-full h-full overflow-visible" viewBox="0 0 500 200"></svg>
         </div>
-        <div>
-          <span class="text-slate-400 block text-[10px]">Werkelijke UF (Pre-Post):</span>
-          <strong id="phoneActualUf" class="text-amber-400 text-sm">0 ml</strong>
+        <div class="flex justify-center gap-4 text-xs text-slate-400">
+          <span class="flex items-center gap-1.5"><span class="w-3 h-3 bg-rose-500 rounded"></span> Systolisch</span>
+          <span class="flex items-center gap-1.5"><span class="w-3 h-3 bg-amber-500 rounded"></span> Diastolisch</span>
+          <span class="flex items-center gap-1.5"><span class="w-3 h-3 bg-sky-500 rounded"></span> Hartslag (BPM)</span>
         </div>
       </div>
-
-      <button id="phoneSaveBtn" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl transition cursor-pointer text-xs shadow">
-        💾 Alles Opslaan & Synchroniseren
-      </button>
     </div>
+
+    <!-- TAB 3: LED KLOK & DASHBOARD -->
+    <div id="tab-tijd" class="tab-pane flex-col gap-4 w-full max-w-4xl mx-auto justify-center items-center h-full">
+      <div class="bg-slate-900/80 border border-slate-800 rounded-3xl p-5 flex flex-col shadow-2xl w-full">
+        <h2 class="text-sky-400 font-bold text-base mb-3 text-center">⏱️ LED Voortgangsklok & Sessie Dashboard</h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+          
+          <div id="openUfPopupBtn" class="bg-slate-950 border border-slate-800 hover:border-sky-500 transition rounded-2xl p-4 flex flex-col gap-3 text-xs cursor-pointer shadow-md">
+            <div>
+              <span class="text-slate-400 font-semibold block mb-0.5">Ingestelde UF <span class="text-sky-400 text-[10px]">(Klik om in te stellen ✏️)</span></span>
+              <div id="panelSetUf" class="text-lg font-extrabold text-sky-400">3800 ml</div>
+            </div>
+            <div>
+              <span class="text-slate-400 font-semibold block mb-0.5">UF / U (Uurlijks)</span>
+              <div id="panelUfPerHour" class="text-lg font-extrabold text-amber-400">950 ml/u</div>
+            </div>
+            <div>
+              <div class="flex justify-between font-semibold mb-1">
+                <span class="text-slate-400">Doel UF (0 tot Ingesteld)</span>
+                <span id="targetUfPercent" class="text-emerald-400">0%</span>
+              </div>
+              <div class="w-full bg-slate-900 rounded-full h-3 border border-slate-800 overflow-hidden">
+                <div id="targetUfBar" class="bg-emerald-500 h-full transition-all duration-500" style="width: 0%"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex flex-col items-center justify-center">
+            <div class="flex justify-between w-full px-2 mb-2 text-xs font-semibold text-slate-400">
+              <div class="flex items-center gap-1">
+                <span>Start:</span>
+                <input type="time" id="startTimeInput" class="bg-slate-950 border border-slate-700 text-sky-400 rounded px-1 py-0.5 text-xs font-bold outline-none cursor-pointer">
+              </div>
+              <div class="flex items-center gap-1">
+                <span>Eind:</span>
+                <input type="time" id="endTimeInput" class="bg-slate-950 border border-slate-700 text-emerald-400 rounded px-1 py-0.5 text-xs font-bold outline-none cursor-pointer">
+              </div>
+            </div>
+
+            <div class="relative w-56 h-56 flex items-center justify-center my-1">
+              <div id="ledRingContainer" class="absolute inset-0 rounded-full pointer-events-none"></div>
+
+              <div class="flex flex-col items-center z-10 bg-slate-950/95 p-3 rounded-full w-36 h-36 justify-center border border-slate-800 shadow-xl">
+                <div id="countdownTimer" class="text-xl font-extrabold text-sky-400 tracking-wider">04:00:00</div>
+                <div id="progressPercentage" class="text-[10px] font-bold text-slate-400 mt-0.5">0% verstreken</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-slate-950 border border-slate-800 rounded-2xl p-4 flex flex-col gap-3 text-xs">
+            <div>
+              <span class="text-slate-400 font-semibold block mb-0.5">Laatst Gemeten Bloeddruk</span>
+              <div id="panelBp" class="text-lg font-extrabold text-emerald-400">120 / 80 mmHg</div>
+            </div>
+            <div>
+              <span class="text-slate-400 font-semibold block mb-0.5">Behandeling Voortgang</span>
+              <div id="panelTreatmentPercent" class="text-lg font-extrabold text-sky-400">0%</div>
+            </div>
+            <div>
+              <span class="text-slate-400 font-semibold block mb-0.5">Actieve Patiënt</span>
+              <div id="activePatientDisplay" class="text-base font-extrabold text-emerald-400 truncate">Niet ingelogd</div>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="flex gap-2 mt-4 w-full">
+          <button id="startTimer" class="flex-1 bg-emerald-600 hover:bg-emerald-500 py-2.5 rounded-xl font-bold transition cursor-pointer text-sm">Start</button>
+          <button id="pauseTimer" class="flex-1 bg-amber-600 hover:bg-amber-500 py-2.5 rounded-xl font-bold transition cursor-pointer text-sm">Pauze</button>
+          <button id="resetTimer" class="flex-1 bg-slate-700 hover:bg-slate-600 py-2.5 rounded-xl font-bold transition cursor-pointer text-sm">Reset</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 4: BPM / BLOEDDRUK & HARTSLAG -->
+    <div id="tab-bpm" class="tab-pane flex-col gap-4 w-full max-w-3xl mx-auto pb-6">
+      <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 shadow-lg flex flex-col gap-4">
+        
+        <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+          <h2 class="text-sky-400 font-bold text-base">❤️ Bloeddruk & Hartslag Instellen (UP / DOWN)</h2>
+          <button id="newBpmBtn" class="bg-sky-600 hover:bg-sky-500 text-white px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1 shadow">
+            ➕ Nieuwe Meting
+          </button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="bg-slate-950 border border-slate-800 rounded-2xl p-4 flex flex-col items-center gap-3">
+            <span class="text-xs font-bold text-slate-400">Systolisch (Bovendruk)</span>
+            <button onclick="adjustBpm('sys', 5)" class="w-full bg-slate-800 hover:bg-slate-700 py-2 rounded-xl text-xs font-bold text-sky-400 cursor-pointer">+5</button>
+            <button onclick="adjustBpm('sys', 1)" class="w-full bg-slate-800 hover:bg-slate-700 py-2 rounded-xl text-xs font-bold text-sky-400 cursor-pointer">UP</button>
+            <div id="sysDisplay" class="w-full py-4 rounded-xl text-center text-3xl font-extrabold text-slate-950 bg-emerald-400 shadow-inner">120</div>
+            <button onclick="adjustBpm('sys', -1)" class="w-full bg-slate-800 hover:bg-slate-700 py-2 rounded-xl text-xs font-bold text-sky-400 cursor-pointer">DOWN</button>
+            <button onclick="adjustBpm('sys', -5)" class="w-full bg-slate-800 hover:bg-slate-700 py-2 rounded-xl text-xs font-bold text-sky-400 cursor-pointer">-5</button>
+          </div>
+
+          <div class="bg-slate-950 border border-slate-800 rounded-2xl p-4 flex flex-col items-center gap-3">
+            <span class="text-xs font-bold text-slate-400">Diastolisch (Onderdruk)</span>
+            <button onclick="adjustBpm('dia', 5)" class="w-full bg-slate-800 hover:bg-slate-700 py-2 rounded-xl text-xs font-bold text-sky-400 cursor-pointer">+5</button>
+            <button onclick="adjustBpm('dia', 1)" class="w-full bg-slate-800 hover:bg-slate-700 py-2 rounded-xl text-xs font-bold text-sky-400 cursor-pointer">UP</button>
+            <div id="diaDisplay" class="w-full py-4 rounded-xl text-center text-3xl font-extrabold text-slate-950 bg-emerald-400 shadow-inner">80</div>
+            <button onclick="adjustBpm('dia', -1)" class="w-full bg-slate-800 hover:bg-slate-700 py-2 rounded-xl text-xs font-bold text-sky-400 cursor-pointer">DOWN</button>
+            <button onclick="adjustBpm('dia', -5)" class="w-full bg-slate-800 hover:bg-slate-700 py-2 rounded-xl text-xs font-bold text-sky-400 cursor-pointer">-5</button>
+          </div>
+
+          <div class="bg-slate-950 border border-slate-800 rounded-2xl p-4 flex flex-col items-center gap-3">
+            <span class="text-xs font-bold text-slate-400">Hartslag (BPM)</span>
+            <button onclick="adjustBpm('hr', 5)" class="w-full bg-slate-800 hover:bg-slate-700 py-2 rounded-xl text-xs font-bold text-sky-400 cursor-pointer">+5</button>
+            <button onclick="adjustBpm('hr', 1)" class="w-full bg-slate-800 hover:bg-slate-700 py-2 rounded-xl text-xs font-bold text-sky-400 cursor-pointer">UP</button>
+            <div id="hrDisplay" class="w-full py-4 rounded-xl text-center text-3xl font-extrabold text-slate-950 bg-emerald-400 shadow-inner">72</div>
+            <button onclick="adjustBpm('hr', -1)" class="w-full bg-slate-800 hover:bg-slate-700 py-2 rounded-xl text-xs font-bold text-sky-400 cursor-pointer">DOWN</button>
+            <button onclick="adjustBpm('hr', -5)" class="w-full bg-slate-800 hover:bg-slate-700 py-2 rounded-xl text-xs font-bold text-sky-400 cursor-pointer">-5</button>
+          </div>
+        </div>
+
+        <button id="saveBpmBtn" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold py-3.5 rounded-xl transition cursor-pointer text-base shadow-lg shadow-emerald-900/30">
+          OPSLAAN
+        </button>
+      </div>
+
+      <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 shadow-lg flex flex-col gap-3">
+        <h3 class="text-sky-400 font-bold text-sm border-b border-slate-800 pb-2">📋 Overzicht Bloeddruk & Hartslag Metingen</h3>
+        <div class="overflow-x-auto max-h-48">
+          <table class="w-full text-left text-xs">
+            <thead class="text-slate-400 border-b border-slate-800">
+              <tr>
+                <th class="py-2 px-2">Datum & Tijd</th>
+                <th class="py-2 px-2">Bloeddruk</th>
+                <th class="py-2 px-2">Hartslag</th>
+                <th class="py-2 px-2 text-right">Actie</th>
+              </tr>
+            </thead>
+            <tbody id="bpmHistoryTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 5: PATIENTEN & VERPLEGING BEHEER -->
+    <div id="tab-patient" class="tab-pane flex-col gap-4 w-full max-w-xl mx-auto pb-6">
+      <!-- Patiënt Beheer -->
+      <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-6 shadow-lg flex flex-col gap-4">
+        <h2 class="text-sky-400 font-bold text-lg border-b border-slate-800 pb-2">👤 Patiënt Beheer & PIN</h2>
+        
+        <div class="flex flex-col gap-3">
+          <span class="text-xs font-bold text-emerald-400">Nieuwe Patiënt Invoeren</span>
+          <div>
+            <label class="block text-xs font-semibold text-slate-400 mb-1">Patiënt Naam</label>
+            <input type="text" id="newPatientName" placeholder="Bijv. Jan de Vries" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-sm font-bold outline-none">
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-semibold text-slate-400 mb-1">Drooggewicht (kg)</label>
+              <input type="number" step="0.1" id="newPatientDry" value="109.0" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-sm font-bold text-center outline-none">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-400 mb-1">Persoonlijke PIN</label>
+              <input type="password" id="newPatientPin" maxlength="6" placeholder="Bijv. 1234" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-sm font-bold text-center tracking-widest outline-none">
+            </div>
+          </div>
+          <button id="saveNewPatientBtn" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 rounded-xl transition cursor-pointer text-sm mt-1">➕ Patiënt Toevoegen</button>
+        </div>
+
+        <div class="border-t border-slate-800 pt-3 flex flex-col gap-2">
+          <span class="text-xs font-bold text-rose-400">Patiënt Afvoeren (Verwijderen op PIN)</span>
+          <div class="flex gap-2">
+            <input type="password" id="deletePatientPin" maxlength="6" placeholder="PIN van patiënt om af te voeren" class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm font-bold text-center tracking-widest outline-none">
+            <button id="deletePatientBtn" class="bg-rose-600 hover:bg-rose-500 text-white px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer">Afvoeren</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- NIEUW: Verpleging Beheer -->
+      <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-6 shadow-lg flex flex-col gap-4">
+        <h2 class="text-sky-400 font-bold text-lg border-b border-slate-800 pb-2">👩‍⚕️ Verpleging Beheer</h2>
+        
+        <div class="flex gap-2">
+          <input type="text" id="newNurseName" placeholder="Naam verpleegkundige" class="flex-1 bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-sm font-bold outline-none">
+          <button id="saveNewNurseBtn" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2.5 rounded-xl text-xs font-bold transition cursor-pointer">➕ Toevoegen</button>
+        </div>
+
+        <div class="flex flex-col gap-2">
+          <span class="text-xs font-semibold text-slate-400">Bestaande Verpleging (klik om te verwijderen):</span>
+          <div id="nurseManageList" class="flex flex-wrap gap-2 max-h-32 overflow-y-auto bg-slate-950 p-3 rounded-xl border border-slate-800">
+            <!-- Wordt dynamisch geladen -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 6: OVERZICHT -->
+    <div id="tab-overzicht" class="tab-pane flex-col gap-4 w-full max-w-4xl mx-auto pb-6">
+      <div id="printArea" class="bg-slate-900/80 border border-slate-800 rounded-2xl p-6 shadow-lg flex flex-col gap-4 w-full">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-slate-800 pb-3 gap-3">
+          <div>
+            <h2 class="text-sky-400 font-bold text-lg">📊 Volledig Dialyse Overzicht</h2>
+            <p class="text-xs text-slate-400 mt-0.5">Filter op periode en print of sla op als PDF</p>
+          </div>
+          <button onclick="window.print()" class="no-print bg-sky-600 hover:bg-sky-500 text-white px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1.5 shadow">
+            🖨️ Print Periode / PDF
+          </button>
+        </div>
+
+        <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 grid grid-cols-1 md:grid-cols-2 gap-3 no-print">
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-400 mb-1">Startdatum</label>
+            <input type="date" id="filterStartDate" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs font-bold text-sky-400 outline-none">
+          </div>
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-400 mb-1">Einddatum</label>
+            <input type="date" id="filterEndDate" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs font-bold text-emerald-400 outline-none">
+          </div>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs">
+            <thead class="text-slate-400 border-b border-slate-800">
+              <tr>
+                <th class="py-2.5 px-2">Datum & Tijd</th>
+                <th class="py-2.5 px-2">Droog</th>
+                <th class="py-2.5 px-2">Pre / Na</th>
+                <th class="py-2.5 px-2">Verpleging</th>
+                <th class="py-2.5 px-2">Extra's (Fragmin/Ijzer/Epo/Shunt)</th>
+                <th class="py-2.5 px-2">Werkelijk UF</th>
+              </tr>
+            </thead>
+            <tbody id="fullOverviewTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
   </main>
 
-  <!-- Onderkant: Laatste Bloeddruk -->
-  <footer class="bg-slate-900 border border-slate-800 p-3 rounded-2xl text-center text-xs text-slate-400 shrink-0">
-    Laatste Bloeddruk: <strong id="phoneBpDisplay" class="text-emerald-400">120 / 80 mmHg</strong>
-  </footer>
+  <!-- ==================== POPUP: INLOGGEN / PATIËNTENMENU ==================== -->
+  <div id="loginModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden items-center justify-center z-50">
+    <div class="bg-slate-900 border border-slate-800 p-6 rounded-3xl w-80 text-center shadow-2xl flex flex-col gap-4">
+      <h3 class="text-sky-400 font-bold text-base">👤 Patiënt Inloggen</h3>
+      
+      <div id="loggedInUserBox" class="hidden flex flex-col gap-3">
+        <div class="text-xs text-slate-400">Huidige patiënt:</div>
+        <div id="activeModalPatientName" class="text-lg font-extrabold text-emerald-400">Jan de Vries</div>
+        <button id="logoutPatientBtn" class="w-full bg-rose-600 hover:bg-rose-500 text-white font-bold py-2.5 rounded-xl transition cursor-pointer text-xs">Uitloggen</button>
+      </div>
+
+      <div id="loginFormBox" class="flex flex-col gap-3">
+        <div>
+          <label class="block text-xs font-semibold text-slate-400 mb-1 text-left">Kies Patiënt</label>
+          <select id="loginPatientSelect" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-xs font-bold text-sky-300 outline-none cursor-pointer">
+            <option value="">-- Selecteer patiënt --</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-400 mb-1 text-left">Persoonlijke PIN</label>
+          <input type="password" id="modalPatientPin" maxlength="6" placeholder="Voer PIN in" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-sm font-bold text-center tracking-widest outline-none">
+        </div>
+        <button id="modalLoginSubmit" class="w-full bg-sky-600 hover:bg-sky-500 text-white font-extrabold py-3 rounded-xl transition cursor-pointer text-xs shadow-lg">Inloggen</button>
+      </div>
+
+      <button id="closeLoginModal" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-300 py-2 rounded-xl font-bold transition cursor-pointer text-xs mt-1">Sluiten</button>
+    </div>
+  </div>
+
+  <!-- ==================== POPUP: INGESTELDE UF ==================== -->
+  <div id="ufPopup" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden items-center justify-center z-50">
+    <div class="bg-slate-900 border border-slate-800 p-6 rounded-3xl w-80 text-center shadow-2xl flex flex-col gap-4">
+      <h3 class="text-sky-400 font-bold text-base">Instellen Ingestelde UF (ml)</h3>
+      
+      <div id="popupUfDisplay" class="bg-slate-950 border border-slate-700 rounded-2xl py-3 text-3xl font-extrabold text-sky-400 tracking-wider">
+        3800
+      </div>
+
+      <div class="grid grid-cols-4 gap-2">
+        <button onclick="pressUfKey('1')" class="bg-slate-800 hover:bg-slate-700 text-white font-bold py-3 rounded-xl text-lg cursor-pointer">1</button>
+        <button onclick="pressUfKey('2')" class="bg-slate-800 hover:bg-slate-700 text-white font-bold py-3 rounded-xl text-lg cursor-pointer">2</button>
+        <button onclick="pressUfKey('3')" class="bg-slate-800 hover:bg-slate-700 text-white font-bold py-3 rounded-xl text-lg cursor-pointer">3</button>
+        <button onclick="pressUfKey('del')" class="bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/30 font-bold py-3 rounded-xl text-sm cursor-pointer flex items-center justify-center">⌫</button>
+
+        <button onclick="pressUfKey('4')" class="bg-slate-800 hover:bg-slate-700 text-white font-bold py-3 rounded-xl text-lg cursor-pointer">4</button>
+        <button onclick="pressUfKey('5')" class="bg-slate-800 hover:bg-slate-700 text-white font-bold py-3 rounded-xl text-lg cursor-pointer">5</button>
+        <button onclick="pressUfKey('6')" class="bg-slate-800 hover:bg-slate-700 text-white font-bold py-3 rounded-xl text-lg cursor-pointer">6</button>
+        <button onclick="pressUfKey('clear')" class="bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30 font-bold py-3 rounded-xl text-xs cursor-pointer flex items-center justify-center">CLS</button>
+
+        <button onclick="pressUfKey('7')" class="bg-slate-800 hover:bg-slate-700 text-white font-bold py-3 rounded-xl text-lg cursor-pointer">7</button>
+        <button onclick="pressUfKey('8')" class="bg-slate-800 hover:bg-slate-700 text-white font-bold py-3 rounded-xl text-lg cursor-pointer">8</button>
+        <button onclick="pressUfKey('9')" class="bg-slate-800 hover:bg-slate-700 text-white font-bold py-3 rounded-xl text-lg cursor-pointer">9</button>
+        <button onclick="pressUfKey('0')" class="bg-slate-800 hover:bg-slate-700 text-white font-bold py-3 rounded-xl text-lg cursor-pointer">0</button>
+
+        <button id="saveUfPopup" class="col-span-4 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold py-3.5 rounded-xl transition cursor-pointer text-base shadow-lg shadow-emerald-900/30">ok</button>
+      </div>
+
+      <button id="closeUfPopup" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-300 py-2 rounded-xl font-bold transition cursor-pointer text-xs">Annuleer</button>
+    </div>
+  </div>
+
+  <!-- ==================== VASTE ONDERBALK MET 6 TEGELS ==================== -->
+  <nav class="no-print bg-slate-900 border-t border-slate-800 p-2 grid grid-cols-6 gap-2 shrink-0 z-20">
+    <button onclick="switchTab('gewicht')" class="nav-btn flex flex-col items-center justify-center p-2 rounded-xl bg-slate-800/60 hover:bg-slate-800 border border-slate-700 transition data-[active=true]:bg-sky-600 data-[active=true]:border-sky-500 cursor-pointer" data-tab="gewicht">
+      <span class="text-lg">⚖️</span>
+      <span class="text-[10px] font-bold mt-0.5">Gewicht</span>
+    </button>
+    <button onclick="switchTab('uf')" class="nav-btn flex flex-col items-center justify-center p-2 rounded-xl bg-slate-800/60 hover:bg-slate-800 border border-slate-700 transition data-[active=true]:bg-sky-600 data-[active=true]:border-sky-500 cursor-pointer" data-tab="uf">
+      <span class="text-lg">📈</span>
+      <span class="text-[10px] font-bold mt-0.5">Grafieken</span>
+    </button>
+    <button onclick="switchTab('tijd')" class="nav-btn flex flex-col items-center justify-center p-2 rounded-xl bg-slate-800/60 hover:bg-slate-800 border border-slate-700 transition data-[active=true]:bg-sky-600 data-[active=true]:border-sky-500 cursor-pointer" data-tab="tijd">
+      <span class="text-lg">⏱️</span>
+      <span class="text-[10px] font-bold mt-0.5">Tijd</span>
+    </button>
+    <button onclick="switchTab('bpm')" class="nav-btn flex flex-col items-center justify-center p-2 rounded-xl bg-slate-800/60 hover:bg-slate-800 border border-slate-700 transition data-[active=true]:bg-sky-600 data-[active=true]:border-sky-500 cursor-pointer" data-tab="bpm">
+      <span class="text-lg">❤️</span>
+      <span class="text-[10px] font-bold mt-0.5">BPM</span>
+    </button>
+    <button onclick="switchTab('patient')" class="nav-btn flex flex-col items-center justify-center p-2 rounded-xl bg-slate-800/60 hover:bg-slate-800 border border-slate-700 transition data-[active=true]:bg-sky-600 data-[active=true]:border-sky-500 cursor-pointer" data-tab="patient">
+      <span class="text-lg">👤</span>
+      <span class="text-[10px] font-bold mt-0.5">Patiënt</span>
+    </button>
+    <button onclick="switchTab('overzicht')" class="nav-btn flex flex-col items-center justify-center p-2 rounded-xl bg-slate-800/60 hover:bg-slate-800 border border-slate-700 transition data-[active=true]:bg-sky-600 data-[active=true]:border-sky-500 cursor-pointer" data-tab="overzicht">
+      <span class="text-lg">📊</span>
+      <span class="text-[10px] font-bold mt-0.5">Overzicht</span>
+    </button>
+  </nav>
+
+  <!-- PIN Beveiliging Modal -->
+  <div id="pinModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden items-center justify-center z-50">
+    <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl w-80 text-center shadow-2xl">
+      <h3 class="text-lg font-bold mb-4">Voer PIN in (8)</h3>
+      <input type="password" id="pinInput" maxlength="4" class="w-full bg-slate-950 border border-slate-800 rounded-xl text-center text-3xl py-3 mb-4 tracking-widest outline-none focus:ring-2 focus:ring-sky-500" placeholder="••••">
+      <div class="flex gap-2">
+        <button id="pinCancel" class="flex-1 bg-slate-800 hover:bg-slate-700 py-2.5 rounded-xl font-bold transition cursor-pointer">Annuleer</button>
+        <button id="pinSubmit" class="flex-1 bg-sky-600 hover:bg-sky-500 py-2.5 rounded-xl font-bold transition cursor-pointer">Ontgrendel</button>
+      </div>
+    </div>
+  </div>
 
   <script>
+    // --- 36 LED's GENEREREN ---
+    const ledRingContainer = document.getElementById('ledRingContainer');
+    const TOTAL_LEDS = 36;
+    for (let i = 0; i < TOTAL_LEDS; i++) {
+      const angle = (i / TOTAL_LEDS) * 360;
+      const dot = document.createElement('div');
+      dot.className = "absolute w-2 h-3.5 bg-slate-800 rounded-sm led-dot";
+      
+      const radius = 104;
+      const rad = (angle - 90) * (Math.PI / 180);
+      const x = 112 + radius * Math.cos(rad) - 4;
+      const y = 112 + radius * Math.sin(rad) - 7;
+      
+      dot.style.left = x + 'px';
+      dot.style.top = y + 'px';
+      dot.style.transform = `rotate(${angle}deg)`;
+      ledRingContainer.appendChild(dot);
+    }
+    const ledDots = document.querySelectorAll('.led-dot');
+
+    // --- TABBLAD NAVIGATIE ---
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-pane').forEach(el => el.classList.remove('active'));
+      document.getElementById('tab-' + tabId).classList.add('active');
+
+      document.querySelectorAll('.nav-btn').forEach(btn => {
+        if (btn.getAttribute('data-tab') === tabId) {
+          btn.setAttribute('data-active', 'true');
+        } else {
+          btn.removeAttribute('data-active');
+        }
+      });
+    }
+    switchTab('gewicht');
+
+    // --- FIREBASE CONFIGURATIE ---
     const firebaseConfig = {
       apiKey: "AIzaSyDOj-x4BV4J1rkZ21R29D5KknkTaswWvw",
       authDomain: "tabos-vocht.firebaseapp.com",
@@ -105,33 +609,445 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
     const sessionRef = db.ref('dialyse_actieve_sessie');
+    const historyRef = db.ref('dialyse_historie');
+    const bpmHistoryRef = db.ref('dialyse_bpm_historie');
+    const patientsRef = db.ref('dialyse_patienten');
+    const nursesRef = db.ref('dialyse_verpleging');
 
-    let remoteState = {
-      isRunning: false,
-      startTimeEpoch: null,
-      pausedTimeLeft: 4 * 3600,
-      totalDuration: 4 * 3600,
-      dryWeight: 109.0
+    // --- WAKE LOCK API ---
+    async function requestWakeLock() {
+      if ('wakeLock' in navigator) {
+        try { await navigator.wakeLock.request('screen'); } catch (err) {}
+      }
+    }
+    requestWakeLock();
+    document.addEventListener('visibilitychange', async () => {
+      if (document.visibilityState === 'visible') await requestWakeLock();
+    });
+
+    // --- KIOSK MODE & REFRESH ---
+    const kioskBtn = document.getElementById('kioskBtn');
+    kioskBtn.onclick = () => {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+        kioskBtn.innerText = "⛶ Normaal";
+      } else {
+        if (document.exitFullscreen) document.exitFullscreen();
+        kioskBtn.innerText = "⛶ Kiosk";
+      }
     };
 
-    const phoneCountdown = document.getElementById('phoneCountdown');
-    const phoneProgressBar = document.getElementById('phoneProgressBar');
-    const phoneProgressText = document.getElementById('phoneProgressText');
-    const phonePreWeight = document.getElementById('phonePreWeight');
-    const phonePostWeight = document.getElementById('phonePostWeight');
-    const phoneSetUfInput = document.getElementById('phoneSetUfInput');
-    const phoneUfAdvise = document.getElementById('phoneUfAdvise');
-    const phoneActualUf = document.getElementById('phoneActualUf');
-    const phoneBpDisplay = document.getElementById('phoneBpDisplay');
-    const phonePatientName = document.getElementById('phonePatientName');
+    document.getElementById('refreshBtn').onclick = () => {
+      location.reload();
+    };
+
+    const dimmer = document.getElementById('dimmer');
+    document.getElementById('brightnessRange').oninput = (e) => {
+      dimmer.style.opacity = e.target.value / 100;
+    };
+
+    // --- KIOSK PIN ---
+    const pinModal = document.getElementById('pinModal');
+    const pinInput = document.getElementById('pinInput');
+    document.getElementById('lockBtn').onclick = () => { pinModal.style.display = 'flex'; pinInput.value = ''; pinInput.focus(); };
+    document.getElementById('pinSubmit').onclick = () => {
+      if (pinInput.value === '8') { pinModal.style.display = 'none'; if (document.fullscreenElement) document.exitFullscreen().catch(()=>{}); }
+      else { alert('Onjuiste PIN!'); pinInput.value = ''; }
+    };
+    document.getElementById('pinCancel').onclick = () => pinModal.style.display = 'none';
+
+    // --- VERPLEGING BEHEER & RENDEREN ---
+    const nurseCheckboxes = document.getElementById('nurseCheckboxes');
+    const nurseManageList = document.getElementById('nurseManageList');
+    const newNurseName = document.getElementById('newNurseName');
+    let loadedNursesData = {};
+
+    nursesRef.on('value', (snapshot) => {
+      loadedNursesData = snapshot.val() || {};
+      renderNursesUI();
+    });
+
+    function renderNursesUI() {
+      nurseCheckboxes.innerHTML = '';
+      nurseManageList.innerHTML = '';
+
+      const nurseKeys = Object.keys(loadedNursesData);
+      if (nurseKeys.length === 0) {
+        nurseCheckboxes.innerHTML = '<span class="text-xs text-slate-500 col-span-2">Geen verpleging ingevoerd</span>';
+        nurseManageList.innerHTML = '<span class="text-xs text-slate-500">Geen verpleging aanwezig</span>';
+        return;
+      }
+
+      nurseKeys.forEach(id => {
+        const name = loadedNursesData[id];
+        
+        // Multi-select checkboxes in tab 1
+        const label = document.createElement('label');
+        label.className = "flex items-center gap-2 text-xs font-semibold text-slate-300 cursor-pointer bg-slate-900 p-2 rounded-lg border border-slate-800 hover:border-sky-500";
+        label.innerHTML = `<input type="checkbox" value="${name}" class="nurse-chk w-4 h-4 accent-sky-500 cursor-pointer"> ${name}`;
+        nurseCheckboxes.appendChild(label);
+
+        // Badge in patiënt/verpleging beheer om te verwijderen
+        const badge = document.createElement('div');
+        badge.className = "bg-slate-900 border border-slate-700 px-3 py-1 rounded-lg text-xs font-bold text-sky-300 flex items-center gap-2 cursor-pointer hover:border-rose-500";
+        badge.innerHTML = `${name} <span class="text-rose-400 font-bold">×</span>`;
+        badge.onclick = () => {
+          if (confirm(`Verpleegkundige ${name} verwijderen?`)) {
+            nursesRef.child(id).remove();
+          }
+        };
+        nurseManageList.appendChild(badge);
+      });
+
+      // Koppel event listeners aan de checkboxes om te synchroniseren met Firebase
+      document.querySelectorAll('.nurse-chk').forEach(chk => {
+        chk.onchange = gatherAndSyncSessionExtras;
+      });
+    }
+
+    document.getElementById('saveNewNurseBtn').onclick = () => {
+      const name = newNurseName.value.trim();
+      if (!name) {
+        alert('Vul een verpleegkundige naam in!');
+        return;
+      }
+      nursesRef.push(name);
+      newNurseName.value = '';
+    };
+
+    // --- INLOGMENU & PATIËNTENBEHEER ---
+    const loginModal = document.getElementById('loginModal');
+    const openLoginMenuBtn = document.getElementById('openLoginMenuBtn');
+    const closeLoginModal = document.getElementById('closeLoginModal');
+    const loginPatientSelect = document.getElementById('loginPatientSelect');
+    const modalPatientPin = document.getElementById('modalPatientPin');
+    const modalLoginSubmit = document.getElementById('modalLoginSubmit');
+    const loggedInUserBox = document.getElementById('loggedInUserBox');
+    const loginFormBox = document.getElementById('loginFormBox');
+    const activeModalPatientName = document.getElementById('activeModalPatientName');
+    const logoutPatientBtn = document.getElementById('logoutPatientBtn');
+    const headerLoginText = document.getElementById('headerLoginText');
+    const activePatientDisplay = document.getElementById('activePatientDisplay');
+
+    let loadedPatientsData = {};
+
+    patientsRef.on('value', (snapshot) => {
+      loginPatientSelect.innerHTML = '<option value="">-- Selecteer patiënt --</option>';
+      loadedPatientsData = snapshot.val() || {};
+      Object.keys(loadedPatientsData).forEach(pin => {
+        const p = loadedPatientsData[pin];
+        const opt = document.createElement('option');
+        opt.value = pin;
+        opt.textContent = p.name;
+        loginPatientSelect.appendChild(opt);
+      });
+    });
+
+    openLoginMenuBtn.onclick = () => { loginModal.style.display = 'flex'; modalPatientPin.value = ''; };
+    closeLoginModal.onclick = () => { loginModal.style.display = 'none'; };
+
+    modalLoginSubmit.onclick = () => {
+      const selectedPin = loginPatientSelect.value;
+      const enteredPin = modalPatientPin.value.trim();
+
+      if (!selectedPin) { alert('Selecteer alstublieft een patiënt.'); return; }
+
+      const patient = loadedPatientsData[selectedPin];
+      if (patient && patient.pin === enteredPin) {
+        activeModalPatientName.innerText = patient.name;
+        headerLoginText.innerText = patient.name;
+        activePatientDisplay.innerText = patient.name;
+        dryWeightInput.value = patient.dryWeight;
+        berekenUF(true);
+
+        sessionRef.update({ patientName: patient.name, dryWeight: patient.dryWeight });
+        modalPatientPin.value = '';
+
+        loggedInUserBox.classList.remove('hidden');
+        loginFormBox.classList.add('hidden');
+        alert(`Welkom ${patient.name}! Drooggewicht ingesteld op ${patient.dryWeight} kg.`);
+        loginModal.style.display = 'none';
+        switchTab('tijd');
+      } else {
+        alert('Onjuiste PIN-code voor deze patiënt!');
+        modalPatientPin.value = '';
+      }
+    };
+
+    logoutPatientBtn.onclick = () => {
+      headerLoginText.innerText = "Inloggen";
+      activePatientDisplay.innerText = "Niet ingelogd";
+      loggedInUserBox.classList.add('hidden');
+      loginFormBox.classList.remove('hidden');
+      loginPatientSelect.value = "";
+      modalPatientPin.value = "";
+      sessionRef.update({ patientName: "Niet ingelogd" });
+      alert('Succesvol uitgelogd.');
+      loginModal.style.display = 'none';
+    };
+
+    const newPatientName = document.getElementById('newPatientName');
+    const newPatientDry = document.getElementById('newPatientDry');
+    const newPatientPin = document.getElementById('newPatientPin');
+    const deletePatientPin = document.getElementById('deletePatientPin');
+
+    document.getElementById('saveNewPatientBtn').onclick = () => {
+      const name = newPatientName.value.trim();
+      const dry = parseFloat(newPatientDry.value) || 109.0;
+      const pin = newPatientPin.value.trim();
+      if (!name || !pin) { alert('Vul naam en PIN in!'); return; }
+      patientsRef.child(pin).set({ name, dryWeight: dry, pin });
+      alert(`Patiënt ${name} succesvol toegevoegd!`);
+      newPatientName.value = ''; newPatientPin.value = '';
+    };
+
+    document.getElementById('deletePatientBtn').onclick = () => {
+      const pin = deletePatientPin.value.trim();
+      if (loadedPatientsData[pin]) {
+        if (confirm(`Weet je zeker dat je patiënt ${loadedPatientsData[pin].name} wilt afvoeren?`)) {
+          patientsRef.child(pin).remove();
+          alert('Patiënt afgevoerd.');
+          deletePatientPin.value = '';
+        }
+      } else { alert('Geen patiënt gevonden met deze PIN!'); }
+    };
+
+    // --- GEWICHT & EXTRA'S SYNCHRONISATIE ---
+    const dryWeightInput = document.getElementById('dryWeight');
+    const preWeightInput = document.getElementById('preWeight');
+    const postWeightInput = document.getElementById('postWeight');
+    const ufValueEl = document.getElementById('ufValue');
+    const ufTrafficLabel = document.getElementById('ufTrafficLabel');
+    const setUfInput = document.getElementById('setUfInput');
+    const actualUfDisplay = document.getElementById('actualUfDisplay');
+
+    const panelSetUf = document.getElementById('panelSetUf');
+    const panelUfPerHour = document.getElementById('panelUfPerHour');
+    const targetUfPercent = document.getElementById('targetUfPercent');
+    const targetUfBar = document.getElementById('targetUfBar');
+    const panelBp = document.getElementById('panelBp');
+    const panelTreatmentPercent = document.getElementById('panelTreatmentPercent');
+
+    // Extra velden
+    const fragmin2500Check = document.getElementById('fragmin2500Check');
+    const fragmin2500Freq = document.getElementById('fragmin2500Freq');
+    const fragmin5000Check = document.getElementById('fragmin5000Check');
+    const fragmin5000Freq = document.getElementById('fragmin5000Freq');
+    const ijzerCheck = document.getElementById('ijzerCheck');
+    const epoCheck = document.getElementById('epoCheck');
+    const shuntCheck = document.getElementById('shuntCheck');
+    const shuntValue = document.getElementById('shuntValue');
+
+    function gatherAndSyncSessionExtras() {
+      const selectedNurses = [];
+      document.querySelectorAll('.nurse-chk:checked').forEach(chk => selectedNurses.push(chk.value));
+
+      sessionRef.update({
+        nurses: selectedNurses,
+        fragmin2500: fragmin2500Check.checked,
+        fragmin2500Freq: fragmin2500Freq.value,
+        fragmin5000: fragmin5000Check.checked,
+        fragmin5000Freq: fragmin5000Freq.value,
+        ijzer: ijzerCheck.checked,
+        epo: epoCheck.checked,
+        shunt: shuntCheck.checked,
+        shuntValue: shuntValue.value
+      });
+    }
+
+    [fragmin2500Check, fragmin2500Freq, fragmin5000Check, fragmin5000Freq, ijzerCheck, epoCheck, shuntCheck, shuntValue].forEach(el => {
+      el.oninput = gatherAndSyncSessionExtras;
+      el.onchange = gatherAndSyncSessionExtras;
+    });
+
+    // --- BPM UP/DOWN LOGICA & KLEUREN ---
+    let currentSys = 120; let currentDia = 80; let currentHr = 72;
+    const sysDisplay = document.getElementById('sysDisplay');
+    const diaDisplay = document.getElementById('diaDisplay');
+    const hrDisplay = document.getElementById('hrDisplay');
+
+    window.adjustBpm = function(type, amount) {
+      if (type === 'sys') { currentSys = Math.max(50, Math.min(220, currentSys + amount)); sysDisplay.innerText = currentSys; updateBpmColor(sysDisplay, currentSys, 100, 140); }
+      else if (type === 'dia') { currentDia = Math.max(30, Math.min(140, currentDia + amount)); diaDisplay.innerText = currentDia; updateBpmColor(diaDisplay, currentDia, 60, 90); }
+      else if (type === 'hr') { currentHr = Math.max(40, Math.min(180, currentHr + amount)); hrDisplay.innerText = currentHr; updateBpmColor(hrDisplay, currentHr, 60, 100); }
+    };
+
+    function getBpmColorClass(val, greenMin, greenMax) {
+      if (val >= greenMin && val <= greenMax) return "bg-emerald-400 text-slate-950";
+      else if ((val >= greenMin - 15 && val < greenMin) || (val > greenMax && val <= greenMax + 20)) return "bg-amber-400 text-slate-950";
+      else return "bg-rose-600 text-white";
+    }
+
+    function updateBpmColor(el, val, greenMin, greenMax) {
+      el.className = `w-full py-4 rounded-xl text-center text-3xl font-extrabold shadow-inner ${getBpmColorClass(val, greenMin, greenMax)}`;
+    }
+
+    document.getElementById('newBpmBtn').onclick = () => {
+      currentSys = 120; currentDia = 80; currentHr = 72;
+      sysDisplay.innerText = currentSys; diaDisplay.innerText = currentDia; hrDisplay.innerText = currentHr;
+      updateBpmColor(sysDisplay, currentSys, 100, 140); updateBpmColor(diaDisplay, currentDia, 60, 90); updateBpmColor(hrDisplay, currentHr, 60, 100);
+    };
+
+    document.getElementById('saveBpmBtn').onclick = () => {
+      const nowStr = new Date().toLocaleDateString('nl-NL') + ' ' + new Date().toLocaleTimeString('nl-NL', {hour: '2-digit', minute:'2-digit'});
+      const bpString = `${currentSys}/${currentDia}`;
+      bpmHistoryRef.push({
+        date: nowStr, timestamp: Date.now(), bp: bpString, sys: currentSys, dia: currentDia, hr: currentHr,
+        sysClass: getBpmColorClass(currentSys, 100, 140), diaClass: getBpmColorClass(currentDia, 60, 90), hrClass: getBpmColorClass(currentHr, 60, 100)
+      });
+      panelBp.innerText = bpString + ' mmHg';
+      sessionRef.update({ bp: bpString, hr: currentHr });
+    };
+
+    window.deleteBpmRecord = (key) => { if (confirm('Verwijderen?')) bpmHistoryRef.child(key).remove(); };
+
+    // --- TABEL & GESCHIEDENIS ---
+    const historyTableBody = document.getElementById('historyTableBody');
+    const bpmHistoryTableBody = document.getElementById('bpmHistoryTableBody');
+    const fullOverviewTableBody = document.getElementById('fullOverviewTableBody');
+    const bpmLineChart = document.getElementById('bpmLineChart');
+    const filterStartDate = document.getElementById('filterStartDate');
+    const filterEndDate = document.getElementById('filterEndDate');
+    let globalHistoryData = null;
+
+    historyRef.on('value', (snapshot) => { globalHistoryData = snapshot.val(); renderFilteredHistory(); });
+    filterStartDate.onchange = renderFilteredHistory; filterEndDate.onchange = renderFilteredHistory;
+
+    function renderFilteredHistory() {
+      historyTableBody.innerHTML = ''; fullOverviewTableBody.innerHTML = ''; chartContainer.innerHTML = '';
+      const data = globalHistoryData; let weights = [];
+      const startVal = filterStartDate.value ? new Date(filterStartDate.value).getTime() : 0;
+      const endVal = filterEndDate.value ? new Date(filterEndDate.value).getTime() + 86400000 : Infinity;
+
+      if (data) {
+        Object.keys(data).reverse().forEach(key => {
+          const item = data[key];
+          if (item.timestamp && (item.timestamp < startVal || item.timestamp > endVal)) return;
+          if (item.pre) weights.push(parseFloat(item.pre));
+          if (item.post) weights.push(parseFloat(item.post));
+
+          const extrasSummary = [
+            item.nurses ? `Verpleging: ${item.nurses.join(', ')}` : '',
+            item.fragmin2500 ? `Fragmin 2500 (${item.fragmin2500Freq || '-'})` : '',
+            item.fragmin5000 ? `Fragmin 5000 (${item.fragmin5000Freq || '-'})` : '',
+            item.ijzer ? 'Ijzer' : '',
+            item.epo ? 'Epo' : '',
+            item.shunt ? `Shuntflow: ${item.shuntValue || '-'}` : ''
+          ].filter(Boolean).join(' | ');
+
+          const row = document.createElement('tr');
+          row.className = "border-b border-slate-900 hover:bg-slate-900/50";
+          row.innerHTML = `
+            <td class="py-2 px-1 text-slate-300">${item.date}</td>
+            <td class="py-2 px-1 font-bold text-sky-400">${item.pre} kg</td>
+            <td class="py-2 px-1 font-bold text-emerald-400">${item.post} kg</td>
+            <td class="py-2 px-1 text-slate-300">${item.calculatedUf}</td>
+            <td class="py-2 px-1 text-sky-300">${item.setUf || '-'}</td>
+            <td class="py-2 px-1 font-bold text-amber-400">${item.actualUf || '-'}</td>
+            <td class="py-2 px-1 text-right"><button onclick="deleteSession('${key}')" class="text-rose-400 hover:underline">Verwijder</button></td>
+          `;
+          historyTableBody.appendChild(row);
+
+          const fullRow = document.createElement('tr');
+          fullRow.className = "border-b border-slate-900";
+          fullRow.innerHTML = `
+            <td class="py-2 px-2 text-slate-300">${item.date}</td>
+            <td class="py-2 px-2 font-bold text-sky-400">${item.dry || '-'} kg</td>
+            <td class="py-2 px-2 text-sky-300">${item.pre} / ${item.post} kg</td>
+            <td class="py-2 px-2 text-slate-300">${item.nurses ? item.nurses.join(', ') : '-'}</td>
+            <td class="py-2 px-2 text-xs text-slate-300">${extrasSummary || 'Geen extra’s'}</td>
+            <td class="py-2 px-2 font-bold text-amber-400">${item.actualUf || '-'}</td>
+          `;
+          fullOverviewTableBody.appendChild(fullRow);
+        });
+      }
+    }
+
+    // --- UF POPUP TOETSENBORD ---
+    const ufPopup = document.getElementById('ufPopup');
+    const popupUfDisplay = document.getElementById('popupUfDisplay');
+    let tempUfValue = "3800";
+
+    document.getElementById('openUfPopupBtn').onclick = () => { tempUfValue = setUfInput.value || "3800"; popupUfDisplay.innerText = tempUfValue; ufPopup.style.display = 'flex'; };
+    document.getElementById('closeUfPopup').onclick = () => { ufPopup.style.display = 'none'; };
+    window.pressUfKey = (key) => {
+      if (key === 'clear') tempUfValue = "0";
+      else if (key === 'del') tempUfValue = tempUfValue.length > 1 ? tempUfValue.slice(0, -1) : "0";
+      else tempUfValue = tempUfValue === "0" ? key : tempUfValue + key;
+      popupUfDisplay.innerText = tempUfValue;
+    };
+    document.getElementById('saveUfPopup').onclick = () => {
+      setUfInput.value = tempUfValue; panelSetUf.innerText = tempUfValue + ' ml';
+      updateDashboardValues(); ufPopup.style.display = 'none';
+      sessionRef.update({ setUf: tempUfValue });
+    };
+
+    let userModifiedSetUf = false;
+    setUfInput.oninput = () => { userModifiedSetUf = true; updateDashboardValues(); sessionRef.update({ setUf: setUfInput.value }); };
+
+    function updateDashboardValues() {
+      const setUfVal = parseFloat(setUfInput.value) || 3800;
+      panelSetUf.innerText = setUfVal + ' ml';
+      const durationHours = totalDurationSec > 0 ? totalDurationSec / 3600 : 4;
+      panelUfPerHour.innerText = Math.round(setUfVal / durationHours) + ' ml/u';
+    }
+
+    function berekenUF(syncToFirebase = true) {
+      const dry = parseFloat(dryWeightInput.value) || 109.0;
+      const pre = parseFloat(preWeightInput.value) || 0;
+      const post = parseFloat(postWeightInput.value) || 0;
+      const ufKg = (pre - dry + 0.3);
+      const ufMl = Math.round(ufKg * 1000);
+      ufValueEl.innerText = ufMl + ' ml';
+      const actualUfMl = Math.round((pre - post) * 1000);
+      actualUfDisplay.innerText = (pre > 0 && post > 0) ? actualUfMl + ' ml' : '0 ml';
+      if (!userModifiedSetUf) setUfInput.value = ufMl;
+      updateDashboardValues();
+
+      if (syncToFirebase) {
+        sessionRef.update({ dryWeight: dry, preWeight: pre, postWeight: post, calculatedUf: ufMl, setUf: setUfInput.value, actualUf: (pre > 0 && post > 0) ? actualUfMl : 0 });
+      }
+    }
+
+    dryWeightInput.oninput = () => berekenUF(true);
+    preWeightInput.oninput = () => berekenUF(true);
+    postWeightInput.oninput = () => berekenUF(true);
+
+    document.getElementById('saveSessionBtn').onclick = () => {
+      const pre = parseFloat(preWeightInput.value) || 0;
+      const post = parseFloat(postWeightInput.value) || 0;
+      const selectedNurses = [];
+      document.querySelectorAll('.nurse-chk:checked').forEach(chk => selectedNurses.push(chk.value));
+
+      historyRef.push({
+        date: new Date().toLocaleDateString('nl-NL') + ' ' + new Date().toLocaleTimeString('nl-NL', {hour: '2-digit', minute:'2-digit'}),
+        timestamp: Date.now(),
+        dry: dryWeightInput.value,
+        pre: pre, post: post,
+        calculatedUf: ufValueEl.innerText,
+        setUf: setUfInput.value ? setUfInput.value + ' ml' : '-',
+        actualUf: (pre > 0 && post > 0) ? Math.round((pre - post) * 1000) + ' ml' : '-',
+        nurses: selectedNurses,
+        fragmin2500: fragmin2500Check.checked, fragmin2500Freq: fragmin2500Freq.value,
+        fragmin5000: fragmin5000Check.checked, fragmin5000Freq: fragmin5000Freq.value,
+        ijzer: ijzerCheck.checked, epo: epoCheck.checked,
+        shunt: shuntCheck.checked, shuntValue: shuntValue.value
+      });
+      alert('Sessie succesvol opgeslagen!');
+    };
+
+    window.deleteSession = (key) => { if (confirm('Sessie verwijderen?')) historyRef.child(key).remove(); };
+
+    // --- TIMER & TIMESTAMP LOGICA ---
+    let totalDurationSec = 4 * 3600;
+    let remoteState = { isRunning: false, startTimeEpoch: null, pausedTimeLeft: 4 * 3600, totalDuration: 4 * 3600 };
+    const startTimeInput = document.getElementById('startTimeInput');
+    const endTimeInput = document.getElementById('endTimeInput');
+    startTimeInput.value = "08:00"; endTimeInput.value = "12:00";
 
     function calculateCurrentLeft() {
-      if (!remoteState.isRunning) {
-        return remoteState.pausedTimeLeft;
-      }
-      const elapsedSec = Math.floor((Date.now() - remoteState.startTimeEpoch) / 1000);
-      const remaining = remoteState.totalDuration - elapsedSec;
-      return Math.max(0, remaining);
+      if (!remoteState.isRunning) return remoteState.pausedTimeLeft;
+      return Math.max(0, remoteState.totalDuration - Math.floor((Date.now() - remoteState.startTimeEpoch) / 1000));
     }
 
     function renderTimer() {
@@ -139,122 +1055,93 @@
       const hours = Math.floor(timeLeft / 3600).toString().padStart(2, '0');
       const minutes = Math.floor((timeLeft % 3600) / 60).toString().padStart(2, '0');
       const seconds = (timeLeft % 60).toString().padStart(2, '0');
+      const timeStr = `${hours}:${minutes}:${seconds}`;
       
-      phoneCountdown.innerText = `${hours}:${minutes}:${seconds}`;
+      document.getElementById('countdownTimer').innerText = timeStr;
+      document.getElementById('topCountdown').innerText = timeStr;
 
-      const elapsed = remoteState.totalDuration - timeLeft;
-      const progress = remoteState.totalDuration > 0 ? Math.min(Math.max(elapsed / remoteState.totalDuration, 0), 1) : 0;
+      const progress = remoteState.totalDuration > 0 ? Math.min(Math.max((remoteState.totalDuration - timeLeft) / remoteState.totalDuration, 0), 1) : 0;
       const percent = Math.round(progress * 100);
+      document.getElementById('progressPercentage').innerText = percent + '% verstreken';
+      panelTreatmentPercent.innerText = percent + '%';
+      targetUfPercent.innerText = percent + '%';
+      targetUfBar.style.width = percent + '%';
 
-      phoneProgressBar.style.width = percent + '%';
-      phoneProgressText.innerText = percent + '% verstreken';
+      const activeLeds = Math.round(progress * TOTAL_LEDS);
+      ledDots.forEach((dot, index) => {
+        dot.style.backgroundColor = index < activeLeds ? '#10b981' : '#1e293b';
+      });
     }
+
+    function recalculateDuration() {
+      const [sh, sm] = startTimeInput.value.split(':');
+      const [eh, em] = endTimeInput.value.split(':');
+      const now = new Date();
+      const startD = new Date(now.getFullYear(), now.getMonth(), now.getDate(), parseInt(sh), parseInt(sm));
+      let endD = new Date(now.getFullYear(), now.getMonth(), now.getDate(), parseInt(eh), parseInt(em));
+      if (endD <= startD) endD.setDate(endD.getDate() + 1);
+
+      totalDurationSec = Math.max(60, Math.floor((endD.getTime() - startD.getTime()) / 1000));
+      remoteState.totalDuration = totalDurationSec;
+      if (!remoteState.isRunning) remoteState.pausedTimeLeft = totalDurationSec;
+      updateDashboardValues(); renderTimer();
+    }
+
+    startTimeInput.onchange = () => { recalculateDuration(); sessionRef.update({ startTimeStr: startTimeInput.value, totalDuration: totalDurationSec }); };
+    endTimeInput.onchange = () => { recalculateDuration(); sessionRef.update({ endTimeStr: endTimeInput.value, totalDuration: totalDurationSec }); };
 
     setInterval(renderTimer, 200);
 
-    function calculatePhoneUf() {
-      const dry = remoteState.dryWeight || 109.0;
-      const pre = parseFloat(phonePreWeight.value) || 0;
-      const post = parseFloat(phonePostWeight.value) || 0;
-
-      const ufKg = (pre - dry + 0.3);
-      const ufMl = Math.round(ufKg * 1000);
-      phoneUfAdvise.innerText = pre > 0 ? ufMl + ' ml' : '0 ml';
-
-      const actualMl = Math.round((pre - post) * 1000);
-      phoneActualUf.innerText = (pre > 0 && post > 0) ? actualMl + ' ml' : '0 ml';
-    }
-
-    phonePreWeight.oninput = calculatePhoneUf;
-    phonePostWeight.oninput = calculatePhoneUf;
-
-    // Knoppen bediening vanaf smartphone
-    document.getElementById('phoneStartTimer').onclick = () => {
-      const currentLeft = calculateCurrentLeft();
-      const newStartEpoch = Date.now() - ((remoteState.totalDuration - currentLeft) * 1000);
-      
-      remoteState.isRunning = true;
-      remoteState.startTimeEpoch = newStartEpoch;
-
-      sessionRef.update({ 
-        isRunning: true, 
-        startTimeEpoch: newStartEpoch,
-        totalDuration: remoteState.totalDuration
-      });
+    document.getElementById('startTimer').onclick = () => {
+      const newStartEpoch = Date.now() - ((remoteState.totalDuration - calculateCurrentLeft()) * 1000);
+      remoteState.isRunning = true; remoteState.startTimeEpoch = newStartEpoch;
+      sessionRef.update({ isRunning: true, startTimeEpoch: newStartEpoch, totalDuration: remoteState.totalDuration });
+    };
+    document.getElementById('pauseTimer').onclick = () => {
+      const left = calculateCurrentLeft(); remoteState.isRunning = false; remoteState.pausedTimeLeft = left;
+      sessionRef.update({ isRunning: false, pausedTimeLeft: left });
+    };
+    document.getElementById('resetTimer').onclick = () => {
+      remoteState.isRunning = false; remoteState.pausedTimeLeft = remoteState.totalDuration; remoteState.startTimeEpoch = null;
+      sessionRef.update({ isRunning: false, pausedTimeLeft: remoteState.totalDuration, startTimeEpoch: null });
     };
 
-    document.getElementById('phonePauseTimer').onclick = () => {
-      const currentLeft = calculateCurrentLeft();
-      remoteState.isRunning = false;
-      remoteState.pausedTimeLeft = currentLeft;
-
-      sessionRef.update({ 
-        isRunning: false, 
-        pausedTimeLeft: currentLeft 
-      });
-    };
-
-    document.getElementById('phoneResetTimer').onclick = () => {
-      remoteState.isRunning = false;
-      remoteState.pausedTimeLeft = remoteState.totalDuration;
-      remoteState.startTimeEpoch = null;
-
-      sessionRef.update({ 
-        isRunning: false, 
-        pausedTimeLeft: remoteState.totalDuration, 
-        startTimeEpoch: null 
-      });
-    };
-
-    document.getElementById('phoneSaveBtn').onclick = () => {
-      const pre = parseFloat(phonePreWeight.value) || 0;
-      const post = parseFloat(phonePostWeight.value) || 0;
-      const dry = remoteState.dryWeight || 109.0;
-      const calcUf = Math.round((pre - dry + 0.3) * 1000);
-      const actualUf = Math.round((pre - post) * 1000);
-      const setUf = phoneSetUfInput.value;
-
-      sessionRef.update({
-        preWeight: pre,
-        postWeight: post,
-        calculatedUf: calcUf,
-        actualUf: (pre > 0 && post > 0) ? actualUf : 0,
-        setUf: setUf
-      });
-      alert('Alle gegevens succesvol opgeslagen en gesynchroniseerd met de kiosk!');
-    };
-
+    // --- FIREBASE LUISTERSTROOM ---
     sessionRef.on('value', (snapshot) => {
       const data = snapshot.val();
       if (data) {
-        if (data.patientName) {
-          phonePatientName.innerText = data.patientName;
-        }
-        if (data.dryWeight) remoteState.dryWeight = data.dryWeight;
-        
-        if (data.preWeight !== undefined && document.activeElement !== phonePreWeight) {
-          phonePreWeight.value = data.preWeight;
-        }
-        if (data.postWeight !== undefined && document.activeElement !== phonePostWeight) {
-          phonePostWeight.value = data.postWeight;
-        }
-        if (data.setUf !== undefined && document.activeElement !== phoneSetUfInput) {
-          phoneSetUfInput.value = data.setUf;
-        }
+        if (data.patientName) { activePatientDisplay.innerText = data.patientName; if (data.patientName !== "Niet ingelogd") headerLoginText.innerText = data.patientName; }
+        if (data.dryWeight && data.dryWeight != dryWeightInput.value) dryWeightInput.value = data.dryWeight;
+        if (data.preWeight && data.preWeight != preWeightInput.value) preWeightInput.value = data.preWeight;
+        if (data.postWeight && data.postWeight != postWeightInput.value) postWeightInput.value = data.postWeight;
+        if (data.setUf && data.setUf != setUfInput.value) { setUfInput.value = data.setUf; panelSetUf.innerText = data.setUf + ' ml'; userModifiedSetUf = true; }
+        if (data.bp) panelBp.innerText = data.bp + ' mmHg';
 
-        calculatePhoneUf();
-
-        if (data.bp) {
-          phoneBpDisplay.innerText = data.bp + ' mmHg';
+        if (data.nurses) {
+          document.querySelectorAll('.nurse-chk').forEach(chk => chk.checked = data.nurses.includes(chk.value));
         }
-        if (data.totalDuration) remoteState.totalDuration = data.totalDuration;
+        if (data.fragmin2500 !== undefined) fragmin2500Check.checked = data.fragmin2500;
+        if (data.fragmin2500Freq) fragmin2500Freq.value = data.fragmin2500Freq;
+        if (data.fragmin5000 !== undefined) fragmin5000Check.checked = data.fragmin5000;
+        if (data.fragmin5000Freq) fragmin5000Freq.value = data.fragmin5000Freq;
+        if (data.ijzer !== undefined) ijzerCheck.checked = data.ijzer;
+        if (data.epo !== undefined) epoCheck.checked = data.epo;
+        if (data.shunt !== undefined) shuntCheck.checked = data.shunt;
+        if (data.shuntValue) shuntValue.value = data.shuntValue;
+
+        if (data.totalDuration) { totalDurationSec = data.totalDuration; remoteState.totalDuration = data.totalDuration; }
         if (typeof data.isRunning === 'boolean') remoteState.isRunning = data.isRunning;
         if (typeof data.startTimeEpoch === 'number') remoteState.startTimeEpoch = data.startTimeEpoch;
         if (typeof data.pausedTimeLeft === 'number') remoteState.pausedTimeLeft = data.pausedTimeLeft;
 
-        renderTimer();
+        berekenUF(false); updateDashboardValues(); renderTimer();
       }
     });
+
+    recalculateDuration(); renderTimer(); berekenUF(false);
+    updateBpmColor(sysDisplay, currentSys, 100, 140);
+    updateBpmColor(diaDisplay, currentDia, 60, 90);
+    updateBpmColor(hrDisplay, currentHr, 60, 100);
   </script>
 </body>
 </html>
